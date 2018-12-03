@@ -303,7 +303,15 @@ def step(x):
     
 def expo_temp1(t, (Tr,Tf)):
     return (-np.exp(-t/Tr)+np.exp(-t/Tf)) 
-    
+
+def A_theta_exp(t, a, t_0, Tr, Tf):
+    offset=[]
+    offset.append(t_0)
+    z=len(t)*offset
+    z=np.array(z)
+    m=expo_temp1(t-z, (Tr,Tf))
+    return step(t-z)*m*a
+
 def theta_exp(t, (t_0,Tr,Tf)):
     
     offset=[]
@@ -406,14 +414,32 @@ def PCAtemplate(list_ofPulse_Dict_Lists):
     print np.shape(u), np.shape(vh)
     one_second_interval = np.linspace(0,1, int(fe))
     for i in range(6):
-        scaling = 0.9
-        if max(vh[i]) == max(np.abs(vh[i])):
-            scaling = 0.9/max(vh[i])
-            print "option 1"
-            pl.plot(one_second_interval, -1.0*scaling*vh[i], label= "Singular Vector " + str(i) , color = 'b')
+        standard_template = theta_exp(one_second_interval, (0.24, 0.008,1.1))
+        standard_template_max = max(standard_template)
+        
+        zeroed_vector = vh[i] - vh[i][0]
+        zeroed_vector[0:int(0.225*fe)] = 0
+        if max(np.abs(zeroed_vector)) == max(zeroed_vector):
+            scaling = standard_template_max/max(zeroed_vector)
         else:
-            pl.plot(one_second_interval, 0.9/min(vh[i])*vh[i], label= "Singular Vector " + str(i) , color = 'b')
-        pl.plot(one_second_interval, theta_exp(one_second_interval, (0.035, 0.008,1.1)), label='Template', color = 'r')
+            scaling = standard_template_max/min(zeroed_vector)
+        scaled_vector = scaling*zeroed_vector
+        if i==0:
+            fit = curve_fit(A_theta_exp, one_second_interval, scaled_vector, (1.0, 0.24, 0.008,1.1))
+            print fit
+            pl.plot(one_second_interval, A_theta_exp(one_second_interval, 1.0, 0.24, 0.008,1.1), label='Initial Guess')
+            pl.plot(one_second_interval, scaled_vector, label = 'Principal Component 0', color='b')
+            pl.plot(one_second_interval, fit[0][0]*theta_exp(one_second_interval, fit[0][1:]) , label='Best Fit', color='r')
+            pl.legend()
+            pl.show()
+            print "Best Params", fit[0]
+            print "Best Time Constants", fit[0][2:]
+            print "Cov of Rise Time", fit[1][2]
+            print "Cov of Fall Time", fit[1][3]
+            print "Cov Matrix", fit[1]
+            
+        pl.plot(one_second_interval, vh[i], label= "Singular Vector " + str(i) , color = 'b')
+        pl.plot(one_second_interval, standard_template , label='Template', color = 'r')
         pl.xlabel('Time [s]')
         pl.ylabel('Amplitude [ADU]')
         pl.legend()
@@ -496,33 +522,42 @@ c1 = 800
 
 list_oneAmpResults = []
 list_oneAmpResults_afterCUT = []
+list_oneAmpResults_afterCUT2= []
+
 list_NoisePSDs = []
 #list_freqs = []
+
+
 for i in range(chunk_number):
-    directory = folder_header + str(i) + '/'
+#    directory = folder_header + str(i) + '/'
+    directory = 'Results/data_run42_dbz1/test/'
     with open(directory + 'oneAMP_pulse_processing_results.p', 'rb') as fp1:
         oneAmp_processed_results = pickle.load(fp1)
 #    with open(directory + 'NoisePSD.p', 'rb') as fp2:
 #        (freq, J) = pickle.load(fp2)
         
-#    oneAmp_afterCUT = getPulseSubset(oneAmp_processed_results, [("amplitude", 0, np.inf)  ])
-#    oneAmp_afterCUT = generalizedCut(oneAmp_afterCUT, "amplitude", "chi", cut_parab, (a1,c1) , True)
+    oneAmp_afterCUT = getPulseSubset(oneAmp_processed_results, [("amplitude", 0, np.inf)  ])
+    oneAmp_afterCUT2 = generalizedCut(oneAmp_afterCUT, "amplitude", "chi", cut_parab, (a1,c1) , True)
 #    
     
-    oneAmp_afterCUT = getPulseSubset(oneAmp_processed_results, [("amplitude", 0, np.inf)  ])
+#    oneAmp_afterCUT = getPulseSubset(oneAmp_processed_results, [("amplitude", 0, np.inf)  ])
 #    oneAmp_afterCUT = generalizedCut(oneAmp_afterCUT, "amplitude", "chi", line, (4985/14.0, -477500/7.0) , False)
-    oneAmp_afterCUT = generalizedCut(oneAmp_afterCUT, "amplitude", "chi", line, (19940/7.0, -976000) , True)
+#    oneAmp_afterCUT2 = generalizedCut(oneAmp_afterCUT, "amplitude", "chi", line, (19940/7.0, -976000) , True)
     
     list_oneAmpResults.append(oneAmp_processed_results)
     list_oneAmpResults_afterCUT.append(oneAmp_afterCUT)
+    list_oneAmpResults_afterCUT2.append(oneAmp_afterCUT2)
 #    list_NoisePSDs.append( (freq,J) )
 
 
 #PCAtemplate(list_oneAmpResults)
 #analyzeFitResults(list_oneAmpResults)
-#PCAtemplate(list_oneAmpResults_afterCUT)
-analyzeFitResults(list_oneAmpResults_afterCUT)
-
+PCAtemplate(list_oneAmpResults_afterCUT)
+print "====================================================="
+print "====================================================="
+#analyzeFitResults(list_oneAmpResults_afterCUT)
+PCAtemplate(list_oneAmpResults_afterCUT2)
+#analyzeFitResults(list_oneAmpResults_afterCUT2)
 #analyzeFitResults(list_oneAmpResults)
 #analyzeFitResults(list_oneAmpResults_afterCUT )
     

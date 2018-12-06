@@ -1214,19 +1214,16 @@ def OFTransferFn(stream, J,freq , parameters,window="boxcar", sglTemplateFunc=A_
 #    OF_full_stream=OF_full_stream.flatten()
 #    
 #    OF_full_stream=np.array(OF_full_stream)
-        
-    pl.plot(time, flat_OF_fullstream, label="Optimally Filtered Stream")
-    pl.hold(True)
+    
     pl.plot(time, stream, label="Unfiltered Stream")
+    pl.hold(True)
+    pl.plot(time, flat_OF_fullstream, label="Optimally Filtered Stream")  
     pl.legend()
     pl.show()
     pl.plot(time, flat_OF_fullstream, label="Optimally Filtered Stream")
     pl.legend()
     pl.show()
-    pl.plot(time, flat_OF_fullstream, label="Optimally Filtered Stream")
-    pl.legend()
-    pl.xlim([10,14])
-    pl.show()
+
     pl.plot(time, stream, label="Unfiltered Stream")
     pl.legend()
     pl.show()
@@ -2418,8 +2415,8 @@ def processFile(file_stream, chunk_size, start_chunk=0, end_chunk=-1):
     
     print "Processing File", file_stream
     for i in range(start_chunk, chunks_needed):
-#        current_directory = 'Results/' + file_stream + '/' +str(chunk_size) + 'hours_' + str(i) + '/'
-        current_directory = 'Results/data_run42_dbz1/test/'
+        current_directory = 'Results/' + 'standardized_starts/'+ file_stream + '/' +str(chunk_size) + 'hours_' + str(i) + '/'
+#        current_directory = 'Results/data_run42_dbz1/test/'
         print "Processing chunk", i , "out of", chunks_needed
         print "Current directory is", current_directory
         chunk_start_time = i*chunk_size*3600 + i*10 #add ten seconds 
@@ -2435,9 +2432,9 @@ def processFile(file_stream, chunk_size, start_chunk=0, end_chunk=-1):
     
 #Begin Main Code!
 
-file1 = 'data_run42_dbz1\\20180314_16h12' #original neutron
+#file1 = 'data_run42_dbz1\\20180314_16h12' #original neutron
 #file1 = 'data_run42_dbz1\\20180314_10h11' #Ba, fails after a couple hours
-#file1 = 'data_run42_dbz1\\20180313_18h32' #good Ba
+file1 = 'data_run42_dbz1\\20180313_18h32' #good Ba
 #file1 = 'data_run42_dbz1\\20180315_14h24' #No source original#
 #file1 = 'data_run42_dbz1\\20180315_09h55' #SANS source post calibatration neutron# fails
 #print "\n\nFile: ", file1
@@ -2451,7 +2448,7 @@ Tr_2amp_fit=0.008
 Tf1_2amp_fit=1.1
 Tf2_2amp_fit=2.5
 
-processFile(file1, chunk_size=1, start_chunk=0, end_chunk=1)
+processFile(file1, chunk_size=1, start_chunk=0)
 #file2 = 'data_run42_dbz1\\20180314_16h12' #original neutron
 #processFile(file2, chunk_size=1)
 

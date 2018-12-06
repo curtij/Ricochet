@@ -26,6 +26,7 @@ import re
 import math
 import scipy
 import pickle  
+import sklearn.cluster as cluster
 
 font =11.5
 #print pl.rcParams.keys()
@@ -98,15 +99,23 @@ def analyzeFitResults(list_ofPulse_Dict_Lists):
             times.append( result.get("time")   )
             delays.append(result.get("delay") )
             errors.append(result.get("amp error") )
+     
+    total=0
+    for i in list_ofPulse_Dict_Lists:
+        print "Number of Pulse Fit is ", len(i)
+        total += len(i)
+    
+    if total==0:
+        print "NO PULSES FOUND"
+        return
+    
     DoF=len(getWindowedFFT(templates[0])[1])
 
     amps=np.array(amps)        
     chis_red=np.array(chis)/DoF
         
-    total=0
-    for i in list_ofPulse_Dict_Lists:
-        print "Number of Pulse Fit is ", len(i)
-        total += len(i)
+
+        
 
     print "Number of Total Pulses", total
 
@@ -207,6 +216,8 @@ def analyzeFitResults(list_ofPulse_Dict_Lists):
     ax.set_ylabel('Chi Sq.')
     x_plot = np.linspace(0, 10*(max(amps)), 250 )
     ax.plot(x_plot, cut_parab(x_plot, (a1, c1)), color='red')
+    ax.plot(x_plot, loglog_line(x_plot, points_below ), color='blue')
+    ax.plot(x_plot, loglog_line(x_plot, points_above), color='blue')
     pl.show()
     
     if slow_amps[0]!=None:
@@ -321,6 +332,14 @@ def theta_exp(t, (t_0,Tr,Tf)):
     m=expo_temp1(t-z, (Tr,Tf))
         
     return step(t-z)*m
+    
+def loglog_line(t, (x1,y1,x2,y2)):
+    '''
+    given two points on a line in a log-log plot (x1,y1) and (x2,y2)
+    returns the power law function through the 2 points
+    '''
+    m = np.log(y2/float(y1))/( np.log(x2/float(x1)) )
+    return y1*(t/float(x1))**m
    
 def generalizedCut(pulse_dict_list, x_var, y_var, function, parameters, veto_greater_than_func):
     '''
@@ -378,7 +397,7 @@ def compareFitResults(list_of_pulse_dict_list1, list_of_pulse_dict_list2 ):
     pl.ylabel('Delta Chi Sq')
     pl.show()
     
-def PCAtemplate(list_ofPulse_Dict_Lists):
+def PCAtemplate(list_ofPulse_Dict_Lists, center_data = False):
     chis=[]
     peaks=[]
     obs_pulses=[]
@@ -403,8 +422,11 @@ def PCAtemplate(list_ofPulse_Dict_Lists):
             errors.append(result.get("amp error") )
             
     pulse_matrix = np.asarray(obs_pulses)
-#    mean_pulse = np.mean(obs_pulses, axis=0) 
-#    centered_pulse_matrix = pulse_matrix - mean_pulse
+    mean_pulse=[]
+#    centered_pulse_matrix
+    if center_data:
+        mean_pulse = np.mean(obs_pulses, axis=0) 
+        centered_pulse_matrix = pulse_matrix - mean_pulse
     svd_output = np.linalg.svd(pulse_matrix)
     
     print "\n PCA Time Domain Uncentered\n"
@@ -433,12 +455,13 @@ def PCAtemplate(list_ofPulse_Dict_Lists):
             pl.legend()
             pl.show()
             print "Best Params", fit[0]
-            print "Best Time Constants", fit[0][2:]
+            print "Best rise time: ", fit[0][2], " +- ", np.sqrt(fit[1][2][2])
+            print "Best rise time: ", fit[0][3], " +- ", np.sqrt(fit[1][3][3])
             print "Cov of Rise Time", fit[1][2]
             print "Cov of Fall Time", fit[1][3]
             print "Cov Matrix", fit[1]
             
-        pl.plot(one_second_interval, vh[i], label= "Singular Vector " + str(i) , color = 'b')
+        pl.plot(one_second_interval, vh[i], label= "Principal Component " + str(i) , color = 'b')
         pl.plot(one_second_interval, standard_template , label='Template', color = 'r')
         pl.xlabel('Time [s]')
         pl.ylabel('Amplitude [ADU]')
@@ -504,62 +527,101 @@ def PCAtemplate(list_ofPulse_Dict_Lists):
 
     
 
-    
 
+def spectralClusterPulses(list_ofPulse_Dict_Lists, center_data = False):
+    chis=[]
+    peaks=[]
+    obs_pulses=[]
+    templates=[]
+    slow_amps=[]
+    fast_amps=[]
+    times=[]
+    amps=[]
+    delays=[]
+    errors=[]
+    for run in list_ofPulse_Dict_Lists:
+        for result in run: #result = a pulse
+            chis.append(result.get("chi")    )
+            peaks.append(result.get("peak")    )
+            obs_pulses.append(result.get("obs pulse") )
+            templates.append(result.get("template") )
+            slow_amps.append(result.get("slow amplitude") )
+            fast_amps.append(result.get("fast amplitude") )
+            amps.append(result.get("amplitude") )
+            times.append( result.get("time")   )
+            delays.append(result.get("delay") )
+            errors.append(result.get("amp error") )
 
+    pulse_matrix = np.asarray(obs_pulses)
+    mean_pulse=[]
+    if center_data:
+        mean_pulse = np.mean(obs_pulses, axis=0) 
+        centered_pulse_matrix = pulse_matrix - mean_pulse
+#    svd_output = np.linalg.svd(pulse_matrix)
+    clustering = cluster.SpectralClustering(n_clusters=4, random_state=0).fit(pulse_matrix)
+    print clustering
+    clustering.labels_
     
     
 
 #file_name = 'data_run42_dbz1\\20180315_14h24' #No source#
 #file_name = 'data_run42_dbz1\\20180313_18h32' #good Ba 12 chunks
-file_name = 'data_run42_dbz1\\20180314_16h12' #Neutrons 15
+file_name = 'data_run42_dbz1\\20180314_16h12' #Neutrons 15 run1, 16 ss run
 chunk_size = 1
-chunk_number = 1 #total number of chunks
-folder_header = 'Results/' + file_name + '/' +str(chunk_size) + 'hours_' 
+chunk_number = 16 #total number of chunks
+#folder_header = 'Results/' + file_name + '/' +str(chunk_size) + 'hours_'  #original runs
+folder_header = 'Results/' + 'standardized_starts/'+ file_name + '/' +str(chunk_size) + 'hours_'  #runs w standardized pulse start times
 
 a1 = 0.02
 c1 = 800
+points_below = (200.,3000., 3000., 2*10**6) 
+points_above = (60.,5000., 1000., 3*10**6)
 
 list_oneAmpResults = []
-list_oneAmpResults_afterCUT = []
-list_oneAmpResults_afterCUT2= []
-
-list_NoisePSDs = []
-#list_freqs = []
-
-
+list_oneAmpResults_posAmps = []
+list_oneAmpResults_signal = []
+list_oneAmpResults_spike = []
+#list_NoisePSDs = []
+##list_freqs = []
 for i in range(chunk_number):
-#    directory = folder_header + str(i) + '/'
-    directory = 'Results/data_run42_dbz1/test/'
+    directory = folder_header + str(i) + '/'
+#    directory = 'Results/data_run42_dbz1/test/'
     with open(directory + 'oneAMP_pulse_processing_results.p', 'rb') as fp1:
         oneAmp_processed_results = pickle.load(fp1)
 #    with open(directory + 'NoisePSD.p', 'rb') as fp2:
 #        (freq, J) = pickle.load(fp2)
         
-    oneAmp_afterCUT = getPulseSubset(oneAmp_processed_results, [("amplitude", 0, np.inf)  ])
-    oneAmp_afterCUT2 = generalizedCut(oneAmp_afterCUT, "amplitude", "chi", cut_parab, (a1,c1) , True)
-#    
-    
-#    oneAmp_afterCUT = getPulseSubset(oneAmp_processed_results, [("amplitude", 0, np.inf)  ])
-#    oneAmp_afterCUT = generalizedCut(oneAmp_afterCUT, "amplitude", "chi", line, (4985/14.0, -477500/7.0) , False)
-#    oneAmp_afterCUT2 = generalizedCut(oneAmp_afterCUT, "amplitude", "chi", line, (19940/7.0, -976000) , True)
-    
+     #signal band   
+    oneAmp_posAmps = getPulseSubset(oneAmp_processed_results, [("amplitude", 0, np.inf)  ])
+    oneAmp_signal = generalizedCut(oneAmp_posAmps, "amplitude", "chi", cut_parab, (a1,c1) , True)
+    #spike band
+    oneAmp_spike= getPulseSubset(oneAmp_processed_results, [("amplitude", 0, np.inf), ("chi", 1000, np.inf)  ])
+    oneAmp_spike = generalizedCut(oneAmp_spike, "amplitude", "chi", loglog_line, points_below , veto_greater_than_func= False )
+    oneAmp_spike = generalizedCut(oneAmp_spike, "amplitude", "chi", loglog_line, points_above, veto_greater_than_func= True)
+
     list_oneAmpResults.append(oneAmp_processed_results)
-    list_oneAmpResults_afterCUT.append(oneAmp_afterCUT)
-    list_oneAmpResults_afterCUT2.append(oneAmp_afterCUT2)
+    list_oneAmpResults_posAmps.append(oneAmp_posAmps)
+    list_oneAmpResults_signal.append(oneAmp_signal)
+    list_oneAmpResults_spike.append(oneAmp_spike)
 #    list_NoisePSDs.append( (freq,J) )
 
+print "====================================================="
+print "ALL POSITIVE AMPLITUDE PULSES"
+print "====================================================="
+analyzeFitResults(list_oneAmpResults_posAmps)
+PCAtemplate(list_oneAmpResults_posAmps)
+#spectralClusterPulses(list_oneAmpResults_posAmps)
+#print "====================================================="
+#print "SIGNAL BAND PULSES ONLY"
+#print "====================================================="
+#analyzeFitResults(list_oneAmpResults_signal)
+#PCAtemplate(list_oneAmpResults_signal)
+#print "====================================================="
+#print "SPIKE BAND PULSES ONLY"
+#print "====================================================="
+#analyzeFitResults(list_oneAmpResults_spike)
+#PCAtemplate(list_oneAmpResults_spike)
 
-#PCAtemplate(list_oneAmpResults)
-#analyzeFitResults(list_oneAmpResults)
-PCAtemplate(list_oneAmpResults_afterCUT)
-print "====================================================="
-print "====================================================="
-#analyzeFitResults(list_oneAmpResults_afterCUT)
-PCAtemplate(list_oneAmpResults_afterCUT2)
-#analyzeFitResults(list_oneAmpResults_afterCUT2)
-#analyzeFitResults(list_oneAmpResults)
-#analyzeFitResults(list_oneAmpResults_afterCUT )
     
 
 #with open('pulses/no_source315/second5h/full_pulse_processing_results_second5h.p', 'rb') as fp2:

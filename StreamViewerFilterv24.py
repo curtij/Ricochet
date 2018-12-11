@@ -581,19 +581,32 @@ Tf_f=0.5  #fast fall
 Tr=0.008 #rise time
 
 def template_fast(t, (t_0,)):
-    
     exp=theta_exp(t, (t_0,Tr_2amp_fit,Tf2_2amp_fit))
-    
     return exp
 
 def template_slow(t, (t_0,)):
-
     exp=theta_exp(t, (t_0,Tr_2amp_fit,Tf1_2amp_fit))
-    
     return exp    
+
+def template_fastV2(t, (t_0,)):
+    exp=theta_exp(t, (t_0,Tr_2ampv2,Tf1_2ampv2))
+    return exp
+
+def template_slowV2(t, (t_0,)):
+    exp=theta_exp(t, (t_0,Tr_2ampv2,Tf2_2ampv2))
+    return exp    
+
 
 def template_1amp(t, (t_0,)):
     exp=theta_exp(t, (t_0, Tr_fit, Tf_fit))
+    return exp
+
+def template_spike(t, (t_0,)):
+    exp=theta_exp(t, (t_0, Tr_spike, Tf_spike))
+    return exp
+
+def template_oneAmpv2(t, (t_0,)):
+    exp=theta_exp(t, (t_0, Tr_v2, Tf_v2))
     return exp
 
 def zeroNoisy(t, (t_0,)):
@@ -2304,9 +2317,29 @@ def processStream(V, t, directory):
     if current_template==AB_theta_exp:
         twoAmp_processed_results=optimalFiltering2amp(stream_active,mod_pulse_locations,J,freq)
         analyzeFitResults([twoAmp_processed_results])
+
+    #now for spike template
+    spike_processed_results = []
+    current_template=A_theta_exp
+    if current_template==A_theta_exp:
+        spike_processed_results=optimalFiltering1amp(stream_active,mod_pulse_locations,J,freq, temp_1=template_spike)
+        analyzeFitResults([spike_processed_results])
+        
+    newT_oneAmp_processed_results = []
+    current_template=A_theta_exp
+    if current_template==A_theta_exp:
+        newT_oneAmp_processed_results=optimalFiltering1amp(stream_active,mod_pulse_locations,J,freq, temp_1=template_oneAmpv2)
+        analyzeFitResults([spike_processed_results])
+        
+    newT_twoAmp_processed_results = []
+    current_template=AB_theta_exp
+#    if current_template==AB_theta_exp:
+##        newT_twoAmp_processed_results=optimalFiltering2amp(stream_active,mod_pulse_locations,J,freq, temp_1=template_slowV2, temp_2=template_fastV2)
+##        analyzeFitResults([twoAmp_processed_results])
         
     with open(directory + 'full_pulse_processing_results.p', 'wb') as fp:
-        pickle.dump( (oneAmp_processed_results, twoAmp_processed_results) , fp )
+        pickle.dump( (oneAmp_processed_results, twoAmp_processed_results, spike_processed_results,
+                      newT_oneAmp_processed_results, newT_twoAmp_processed_results) , fp )
     
     #twoAmp_processed_results=optimalFiltering2amp(stream_active,pulse_locations,J,freq)
     #print "PARAMS: ", time_k
@@ -2415,7 +2448,7 @@ def processFile(file_stream, chunk_size, start_chunk=0, end_chunk=-1):
     
     print "Processing File", file_stream
     for i in range(start_chunk, chunks_needed):
-        current_directory = 'Results/' + 'standardized_starts/'+ file_stream + '/' +str(chunk_size) + 'hours_' + str(i) + '/'
+        current_directory = 'Results/' + 'with_spike2/'+ file_stream + '/' +str(chunk_size) + 'hours_' + str(i) + '/'
 #        current_directory = 'Results/data_run42_dbz1/test/'
         print "Processing chunk", i , "out of", chunks_needed
         print "Current directory is", current_directory
@@ -2434,8 +2467,8 @@ def processFile(file_stream, chunk_size, start_chunk=0, end_chunk=-1):
 
 #file1 = 'data_run42_dbz1\\20180314_16h12' #original neutron
 #file1 = 'data_run42_dbz1\\20180314_10h11' #Ba, fails after a couple hours
-file1 = 'data_run42_dbz1\\20180313_18h32' #good Ba
-#file1 = 'data_run42_dbz1\\20180315_14h24' #No source original#
+#file1 = 'data_run42_dbz1\\20180313_18h32' #good Ba
+file1 = 'data_run42_dbz1\\20180315_14h24' #No source original#
 #file1 = 'data_run42_dbz1\\20180315_09h55' #SANS source post calibatration neutron# fails
 #print "\n\nFile: ", file1
 print ""
@@ -2447,6 +2480,16 @@ Tf_fit=1.1
 Tr_2amp_fit=0.008
 Tf1_2amp_fit=1.1
 Tf2_2amp_fit=2.5
+
+Tr_spike=0.0007514
+Tf_spike=0.0093262  
+
+Tr_v2=0.008965102663169616
+Tf_v2=1.057198547819129 
+
+Tr_2ampv2 = 9.14992725e-03 
+Tf1_2ampv2 = 7.09835925e-01 
+Tf2_2ampv2 = 1.44968148e+06
 
 processFile(file1, chunk_size=1, start_chunk=0)
 #file2 = 'data_run42_dbz1\\20180314_16h12' #original neutron

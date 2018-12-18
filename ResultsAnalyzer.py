@@ -217,15 +217,19 @@ def analyzeFitResults(list_ofPulse_Dict_Lists):
     ax.set_ylabel('Chi Sq.')
     ax.minorticks_on()
     x_plot = np.logspace(np.log10(min(amps)), np.log10(max(amps)), 250 )
-    ax.plot(x_plot, cut_parab(x_plot, (a1, c1)), color='red')
     if source=="Neutron":
         ax.plot(x_plot, loglog_line(x_plot, n0_PU_points_below), color='blue')
         ax.plot(x_plot, loglog_line(x_plot, n0_PU_points_above), color='green')
         ax.plot(x_plot, loglog_line(x_plot, n0_spike_points_above), color='orange')
+        ax.plot(x_plot, cut_parab(x_plot, (a1, c1)), color='red')
     elif source=="Barium":
         ax.plot(x_plot, loglog_line(x_plot, ba_PU_points_above), color='blue')
         ax.plot(x_plot, loglog_line(x_plot, ba_spike_points_below), color='orange')
-  
+        ax.plot(x_plot, cut_parab(x_plot, (a1, c1)), color='red')
+    elif source=="Fe":
+        ax.plot(x_plot, loglog_line(x_plot, fe_PU_points_above), color='blue')
+        ax.plot(x_plot, loglog_line(x_plot, fe_spike_points_below), color='orange')
+        ax.plot(x_plot, cut_parab(x_plot, (a2, c2)), color='red')
     ax.set_ylim([10**1, 10*np.max(chis)])
     pl.show()
     
@@ -649,8 +653,23 @@ def compareFitResults(list_of_pulse_dict_list1, list_of_pulse_dict_list2, list_o
         ax.set_xlabel('Amplitude of One Amplitude Fit')
         ax.set_ylabel('Delta Chi Sq. (Spike - One Amp)')
         ax.minorticks_on()
-        ax.set_ylim([-2*10**3, 2*10**3])
+        ax.set_ylim([-3*10**2, 2*10**2])
         ax.set_xlim([0, 20])
+        pl.show()
+        
+        fig5 = pl.figure()
+        ax = pl.gca()
+        ax.plot(signal_amp_oneAmp , np.asarray(signal_chis_spike) - np.asarray(signal_chis_oneAmp)  , '.', c='red', markeredgecolor='none')
+        ax.plot(spike_amp_oneAmp, np.asarray(spike_chis_spike) - np.asarray(spike_chis_oneAmp), '.', c='orange', markeredgecolor='none')
+        ax.plot(PU_amp_oneAmp , np.asarray(PU_chis_spike) - np.asarray(PU_chis_oneAmp), '.', c='blue', markeredgecolor='none')
+        ax.plot(misc_amp_oneAmp , np.asarray(misc_chis_spike) - np.asarray(misc_chis_oneAmp), '.', c='black', markeredgecolor='none')
+#        ax.set_yscale('log')
+#        ax.set_xscale('log')
+        ax.set_xlabel('Amplitude of One Amplitude Fit')
+        ax.set_ylabel('Delta Chi Sq. (Spike - One Amp)')
+        ax.minorticks_on()
+        ax.set_ylim([-2*10**3, 2*10**3])
+        ax.set_xlim([0, 200])
         pl.show()
         
         
@@ -861,27 +880,30 @@ def spectralClusterPulses(list_ofPulse_Dict_Lists, center_data = False):
 #file_name = 'data_run42_dbz1\\20180315_14h24' #No source#
 #file_name = 'data_run42_dbz1\\20180313_18h32' #good Ba 12 chunks, 14 ss run
 file_name = 'data_run42_dbz1\\20180314_16h12' #Neutrons 15 run1, 16 ss run
-source = "Neutron" #or "Barium"
+source = "Neutron" #or "Barium", Neutron, or Fe
 chunk_size = 1
-chunk_number = 14 #total number of chunks
+chunk_number = 16 #total number of chunks
 #folder_header = 'Results/' + file_name + '/' +str(chunk_size) + 'hours_'  #original runs
 #folder_header = 'Results/' + 'standardized_starts/'+ file_name + '/' +str(chunk_size) + 'hours_'  #runs w standardized pulse start times
-#folder_header = 'Results/' + 'with_spike/'+ file_name + '/' +str(chunk_size) + 'hours_'  #runs w standardized pulse start times
-folder_header = 'Results/' + 'with_spike2/'+ file_name + '/' +str(chunk_size) + 'hours_'  #runs w standardized pulse start times
+folder_header = 'Results/' + 'with_spike/'+ file_name + '/' +str(chunk_size) + 'hours_'  #runs w standardized pulse start times
+#folder_header = 'Results/' + 'with_spike2/'+ file_name + '/' +str(chunk_size) + 'hours_'  #runs w standardized pulse start times
 
 
 a1 = 0.02
 c1 = 800
+a2 = 0.12
+c2 = 800
 #neutron ss
 n0_PU_points_below = (200.,3000., 3000., 2*10**6) 
 n0_PU_points_above = (60.,5000., 1000., 3*10**6)
 n0_spike_points_below = (60.,5000., 1000., 3*10**6) 
 n0_spike_points_above = (10, 1500, 10**3, 1.5*10**7)
-
 #ba ss
 ba_spike_points_below = (10.,2000., 100., 1.5*10**5)
 ba_PU_points_above = (20.,2000., 200., 2*10**5)
-
+#Fe ss
+fe_spike_points_below = (10.,8*10**3., 100., 8*10**5)
+fe_PU_points_above = (10.,2000., 100., 1.5*10**5)
 
 
 list_oneAmpResults = []
@@ -903,8 +925,8 @@ for i in range(chunk_number):
 #        oneAmp_processed_results = pickle.load(fp1)
     with open(directory + 'full_pulse_processing_results.p', 'rb') as fp1:
 #        (oneAmp_processed_results, twoAmp_processed_results, spike_processed_results, newT_oneamp, bq) = pickle.load(fp1)
-        (oneAmp_processed_results, twoAmp_processed_results, newT_oneamp , spike_processed_results, bq) = pickle.load(fp1)
-#        (oneAmp_processed_results, twoAmp_processed_results, spike_processed_results) = pickle.load(fp1)
+#        (oneAmp_processed_results, twoAmp_processed_results, newT_oneamp , spike_processed_results, bq) = pickle.load(fp1)
+        (oneAmp_processed_results, twoAmp_processed_results, spike_processed_results) = pickle.load(fp1)
 #        (oneAmp_processed_results, twoAmp_processed_results) = pickle.load(fp1)
     with open(directory + 'NoisePSD.p', 'rb') as fp2:
         (freq, J) = pickle.load(fp2)
@@ -939,6 +961,16 @@ for i in range(chunk_number):
         #blob
         oneAmp_blob = generalizedCut(oneAmp_posAmps, "amplitude", "chi", cut_parab, (a1,c1) , False)
         oneAmp_blob = getPulseSubset(oneAmp_blob, [("amplitude", 7, 10.5), ("chi", 800, 2000)  ])
+    if source=="Fe":
+        oneAmp_posAmps = getPulseSubset(oneAmp_processed_results, [("amplitude", 0, np.inf)  ])
+        oneAmp_signal = generalizedCut(oneAmp_posAmps, "amplitude", "chi", cut_parab, (a2,c2) , True)
+        #pile-up events?
+        oneAmp_PU= getPulseSubset(oneAmp_processed_results, [("amplitude", 0, np.inf), ("chi", 2000, np.inf)  ])
+        oneAmp_PU= generalizedCut(oneAmp_PU, "amplitude", "chi", loglog_line, fe_PU_points_above, veto_greater_than_func= True )
+        oneAmp_PU = generalizedCut(oneAmp_PU, "amplitude", "chi", cut_parab, (a2,c2) , False)
+        #Spike band events?
+        oneAmp_spike= getPulseSubset(oneAmp_processed_results, [("amplitude", 0, np.inf), ("chi", 10**4, np.inf)  ])
+        oneAmp_spike= generalizedCut(oneAmp_spike, "amplitude", "chi", loglog_line, fe_spike_points_below, veto_greater_than_func= False )
 
 
     list_oneAmpResults.append(oneAmp_processed_results)
@@ -951,7 +983,7 @@ for i in range(chunk_number):
     list_NoisePSDs.append( J )
     
     list_twoAmpResults.append(twoAmp_processed_results)
-    list_spikeResults.append(spike_processed_results)
+#    list_spikeResults.append(spike_processed_results)
     
 
 #Tr_fit = 0.008
@@ -962,32 +994,33 @@ for i in range(chunk_number):
 ##reFit_optimalFiltering1amp(list_oneAmpResults, list_NoisePSDs )
 ##assert False
 
-print "====================================================="
-print "ALL POSITIVE AMPLITUDE PULSES"
-print "====================================================="
-analyzeFitResults(list_oneAmpResults_posAmps)
-compareFitResults(list_oneAmpResults, list_twoAmpResults, list_spikeResults)
-#PCAtemplate(list_oneAmpResults_posAmps)
-#spectralClusterPulses(list_oneAmpResults_posAmps)
+#print "====================================================="
+#print "ALL POSITIVE AMPLITUDE PULSES"
+#print "====================================================="
+#analyzeFitResults(list_oneAmpResults_posAmps)
+##compareFitResults(list_oneAmpResults, list_twoAmpResults, list_spikeResults)
+##PCAtemplate(list_oneAmpResults_posAmps)
+##spectralClusterPulses(list_oneAmpResults_posAmps)
 #print "====================================================="
 #print "SIGNAL BAND PULSES ONLY"
 #print "====================================================="
 #analyzeFitResults(list_oneAmpResults_signal)
 #Nu_pc0_signal = PCAtemplate(list_oneAmpResults_signal)
-
-#print "====================================================="
-#print "POTENTIAL PILE UP PULSES ONLY"
-#print "====================================================="
-#analyzeFitResults(list_oneAmpResults_PU)
-#PCAtemplate(list_oneAmpResults_PU)
-#t_plot = np.linspace(0,1,int(fe))
-#counter = 0
-#for r in list_oneAmpResults_PU:
-#    for i in r:
-#        pl.plot(t_plot, i["obs pulse"], label='Pulse number ' + str(counter) )
-#        pl.legend()
-#        pl.show()
-#        counter+=1
+#
+#
+##print "====================================================="
+##print "POTENTIAL PILE UP PULSES ONLY"
+##print "====================================================="
+##analyzeFitResults(list_oneAmpResults_PU)
+##PCAtemplate(list_oneAmpResults_PU)
+##t_plot = np.linspace(0,1,int(fe))
+##counter = 0
+##for r in list_oneAmpResults_PU:
+##    for i in r:
+##        pl.plot(t_plot, i["obs pulse"], label='Pulse number ' + str(counter) )
+##        pl.legend()
+##        pl.show()
+##        counter+=1
 #print "====================================================="
 #print "POTENTIAL SPIKE BAND PULSES ONLY"
 #print "====================================================="
@@ -1010,66 +1043,99 @@ compareFitResults(list_oneAmpResults, list_twoAmpResults, list_spikeResults)
 #        counter+=1
         
         
-#with open('Nu_pc0s.p', 'rb') as fp:
-#        (Nu_pc0_signal, Nu_pc0_spike) = pickle.load(fp)
-#with open('Ba_pc0s.p', 'rb') as fp:
-#        (Ba_pc0_signal, Ba_pc0_spike) = pickle.load(fp)    
-#one_sec = np.linspace(0, 1, int(fe))
-#pl.plot(one_sec, Nu_pc0_signal, label="Neutron Signal PC")
-#pl.plot(one_sec, Ba_pc0_signal, label="Barium Signal PC")
-#pl.xlabel('Time [s]')
-#pl.ylabel('Amplitude')
-#pl.legend()
-#pl.show()
-#pl.plot(one_sec, Nu_pc0_signal - Ba_pc0_signal, label="Neutron - Barium Signal PC")
-#pl.xlabel('Time [s]')
-#pl.ylabel('Amplitude')
-#pl.legend()
-#pl.show()
-#
-#fit_test = curve_fit(A_theta_exp, one_sec, Nu_pc0_signal - Ba_pc0_signal , (0.35, 0.24, 0.0007514, 0.0093262  )) 
-#pl.plot(one_sec, Nu_pc0_signal - Ba_pc0_signal, label="Neutron - Barium Signal PC")
-#pl.plot(one_sec, A_theta_exp(one_sec, 0.35, 0.24, 0.0007514, 0.0093262  ), label = 'Spike Template', color = 'black')
-##pl.plot(one_sec, A_theta_exp(one_sec, fit_test[0][0], fit_test[0][1], fit_test[0][2], fit_test[0][3] ), label = 'Best Fit', color= 'red')
-#pl.xlabel('Time [s]')
-#pl.ylabel('Amplitude')
-#pl.legend()
-#pl.show()
-#print fit_test
-#
-#pl.plot(one_sec, Nu_pc0_signal/Ba_pc0_signal, label="Neutron/Barium Signal PC")
-#pl.xlabel('Time [s]')
-#pl.legend()
-#pl.show()
-#pl.plot(one_sec, Nu_pc0_signal/Ba_pc0_signal, label="Neutron/Barium Signal PC")
-#pl.xlabel('Time [s]')
-#pl.xlim([0.25,1.0])
-#pl.ylim([0,1.5])
-#pl.legend()
-#pl.show()
-#pl.plot(one_sec, Nu_pc0_spike, label="Neutron Spike PC")
-#pl.plot(one_sec, Ba_pc0_spike, label="Barium Spike PC")
-#pl.xlabel('Time [s]')
-#pl.ylabel('Amplitude')
-#pl.legend()
-#pl.show()
-#index_nu = list(Nu_pc0_spike).index(max(Nu_pc0_spike)) 
-#index_ba = list(Ba_pc0_spike).index(max(Ba_pc0_spike)) 
-#diff = index_ba - index_nu
-#modified_nu_spike = diff*[0] + list(Nu_pc0_spike)
-#modified_nu_spike = modified_nu_spike[0:int(fe)]
-#pl.plot(one_sec, modified_nu_spike, label="Shifted Neutron Spike PC")
-#pl.plot(one_sec, Ba_pc0_spike, label="Barium Spike PC")
-#pl.xlabel('Time [s]')
-#pl.ylabel('Amplitude')
-#pl.legend()
-#pl.show()
-#pl.plot(one_sec, Nu_pc0_spike-Ba_pc0_spike, label="Neutron - Barium Spike PC")
-#pl.legend()
-#pl.show()
-#pl.plot(one_sec, np.asarray(modified_nu_spike)-Ba_pc0_spike, label="Shifted Neutron - Barium Spike PC")
-#pl.legend()
-#pl.show()
+with open('Nu_pc0s.p', 'rb') as fp:
+        (Nu_pc0_signal, Nu_pc0_spike) = pickle.load(fp)
+with open('Ba_pc0s.p', 'rb') as fp:
+        (Ba_pc0_signal, Ba_pc0_spike) = pickle.load(fp)    
+with open('Fe_pc0s.p', 'rb') as fp:
+        (Fe_pc0_signal, Fe_pc0_spike) = pickle.load(fp)   
+one_sec = np.linspace(0, 1, int(fe))
+pl.plot(one_sec, Nu_pc0_signal, label="Neutron Signal PC")
+pl.plot(one_sec, Ba_pc0_signal, label="Barium Signal PC")
+pl.xlabel('Time [s]')
+pl.ylabel('Amplitude')
+pl.legend()
+pl.show()
+pl.plot(one_sec, Nu_pc0_signal, label="Neutron Signal PC")
+pl.plot(one_sec, Ba_pc0_signal, label="Barium Signal PC")
+pl.plot(one_sec, Fe_pc0_signal, label="Fe Signal PC", color='red')
+pl.xlabel('Time [s]')
+pl.ylabel('Amplitude')
+pl.legend()
+pl.show()
+pl.plot(one_sec, Nu_pc0_signal - Ba_pc0_signal, label="Neutron - Barium Signal PC")
+pl.xlabel('Time [s]')
+pl.ylabel('Amplitude')
+pl.legend()
+pl.show()
+
+pl.plot(one_sec, Nu_pc0_signal - Fe_pc0_signal, label="Neutron - Fe Signal PC")
+pl.xlabel('Time [s]')
+pl.ylabel('Amplitude')
+pl.legend()
+pl.show()
+
+pl.plot(one_sec, Fe_pc0_signal - Ba_pc0_signal , label="Fe - Ba Signal PC")
+pl.xlabel('Time [s]')
+pl.ylabel('Amplitude')
+pl.legend()
+pl.show()
+
+fit_test = curve_fit(A_theta_exp, one_sec, Nu_pc0_signal - Ba_pc0_signal , (0.35, 0.24, 0.0007514, 0.0093262  )) 
+pl.plot(one_sec, Nu_pc0_signal - Ba_pc0_signal, label="Neutron - Barium Signal PC")
+pl.plot(one_sec, A_theta_exp(one_sec, 0.35, 0.24, 0.0007514, 0.0093262  ), label = 'Spike Template', color = 'black')
+#pl.plot(one_sec, A_theta_exp(one_sec, fit_test[0][0], fit_test[0][1], fit_test[0][2], fit_test[0][3] ), label = 'Best Fit', color= 'red')
+pl.xlabel('Time [s]')
+pl.ylabel('Amplitude')
+pl.legend()
+pl.show()
+print fit_test
+
+pl.plot(one_sec, Nu_pc0_signal/Ba_pc0_signal, label="Neutron/Barium Signal PC")
+pl.xlabel('Time [s]')
+pl.legend()
+pl.show()
+pl.plot(one_sec, Nu_pc0_signal/Ba_pc0_signal, label="Neutron/Barium Signal PC")
+pl.xlabel('Time [s]')
+pl.xlim([0.25,1.0])
+pl.ylim([0,1.5])
+pl.legend()
+pl.show()
+pl.plot(one_sec, Nu_pc0_spike, label="Neutron Spike PC")
+pl.plot(one_sec, Ba_pc0_spike, label="Barium Spike PC")
+pl.xlabel('Time [s]')
+pl.ylabel('Amplitude')
+pl.legend()
+pl.show()
+index_nu = list(Nu_pc0_spike).index(max(Nu_pc0_spike)) 
+index_ba = list(Ba_pc0_spike).index(max(Ba_pc0_spike)) 
+index_fe = list(Fe_pc0_spike).index(max(Fe_pc0_spike)) 
+
+diff = index_ba - index_nu
+modified_nu_spike = diff*[0] + list(Nu_pc0_spike)
+modified_nu_spike = modified_nu_spike[0:int(fe)]
+diff_Fe = index_ba - index_fe
+modified_fe_spike = diff_Fe*[0] + list(Fe_pc0_spike)
+modified_fe_spike = modified_fe_spike[0:int(fe)]
+pl.plot(one_sec, modified_nu_spike, label="Shifted Neutron Spike PC")
+pl.plot(one_sec, Ba_pc0_spike, label="Barium Spike PC")
+pl.plot(one_sec, modified_fe_spike, label="Shifted Fe Spike PC", color='red')
+pl.xlabel('Time [s]')
+pl.ylabel('Amplitude')
+pl.legend()
+pl.show()
+pl.plot(one_sec, Nu_pc0_spike-Ba_pc0_spike, label="Neutron - Barium Spike PC")
+pl.legend()
+pl.show()
+pl.plot(one_sec, np.asarray(modified_nu_spike)-Ba_pc0_spike, label="Shifted Neutron - Barium Spike PC")
+pl.legend()
+pl.show()
+pl.plot(one_sec, np.asarray(modified_nu_spike)-np.asarray(modified_fe_spike), label="Shifted Neutron - Shifted Fe Spike PC")
+pl.legend()
+pl.show()
+pl.plot(one_sec, np.asarray(modified_fe_spike)-Ba_pc0_spike, label="Shifted Fe - Barium Spike PC")
+pl.legend()
+pl.show()
 #with open('pulses/no_source315/second5h/full_pulse_processing_results_second5h.p', 'rb') as fp2:
 #    (oneAmp_processed_results2, twoAmp_processed_results2) = pickle.load(fp2)
 ##with open('pulses/no_source315/remaining_hours/full_pulse_processing_results_last.p', 'rb') as fp3:

@@ -164,7 +164,19 @@ def analyzeFitResults(list_ofPulse_Dict_Lists):
 #    pl.show() 
 
 
-    amp_hist = pl.hist(amps, range=(0,200), bins = 100)
+    amp_hist = pl.hist(amps, range=(0,200), bins = 100, color='black')
+    pl.xlabel('Amplitude [A.D.U.]')
+    pl.ylabel('Events')
+    pl.xlim([0,200])
+    pl.show()    
+    
+    amp_hist = pl.hist(amps, range=(0,200), bins = 200, color='black')
+    pl.xlabel('Amplitude [A.D.U.]')
+    pl.ylabel('Events')
+    pl.xlim([0,200])
+    pl.show()   
+    
+    amp_hist2 = pl.hist(amps, range=(0,200), bins = 100, color='black', log=True)
     pl.xlabel('Amplitude [A.D.U.]')
     pl.ylabel('Events')
     pl.xlim([0,200])
@@ -201,13 +213,7 @@ def analyzeFitResults(list_ofPulse_Dict_Lists):
 #    pl.ylabel('Events')
 #    pl.show()
         
-    pl.scatter(np.abs(amps), chis)
-    pl.xlabel("Amplitude [A.D.U.]")
-    pl.ylabel("X-Square")
-    pl.xlim([0, 200])
-    pl.ylim([0,5*500])
-    pl.show()
-    
+
     fig = pl.figure()
     ax = pl.gca()
     ax.plot(amps , chis, '.', c='black', markeredgecolor='none')
@@ -231,6 +237,8 @@ def analyzeFitResults(list_ofPulse_Dict_Lists):
         ax.plot(x_plot, loglog_line(x_plot, fe_spike_points_below), color='orange')
         ax.plot(x_plot, cut_parab(x_plot, (a2, c2)), color='red')
     ax.set_ylim([10**1, 10*np.max(chis)])
+    ax.set_xlim([10**0, 3*10**3])
+
     pl.show()
     
     if slow_amps[0]!=None:
@@ -287,18 +295,6 @@ def analyzeFitResults(list_ofPulse_Dict_Lists):
         ax.set_zlabel('Chi Sq')
         pl.show()
     
-    else:
-        pl.scatter(amps, chis_red)
-        pl.xlabel('Amplitude')
-        pl.ylabel('Chi Sq (Reduced)')
-        pl.ylim([0.0,4])
-        pl.show()
-        
-        pl.scatter(amps, chis) 
-        pl.xlabel('Amplitude')
-        pl.ylabel('Chi Sq')
-        pl.ylim([-5,200e3])
-        pl.show()
     
     return
     
@@ -599,6 +595,63 @@ def compareFitResults(list_of_pulse_dict_list1, list_of_pulse_dict_list2, list_o
                                             
                         misc_chis_spike.append(pulse_dict_spike["chi"])
                         misc_amp_spike.append(pulse_dict_spike["amplitude"])
+                elif source=="Fe":
+                    if (pulse_dict_oneAmp["chi"] < cut_parab(pulse_dict_oneAmp["amplitude"], (a2,c2)) 
+                        and pulse_dict_oneAmp["amplitude"] > 0):
+                    #signal band
+                        signal_chis_oneAmp.append(pulse_dict_oneAmp["chi"])
+                        signal_amp_oneAmp.append(pulse_dict_oneAmp["amplitude"])
+                        
+                        signal_chis_twoAmp.append(pulse_dict_twoAmp["chi"])
+                        signal_slowAmp_twoAmp.append(pulse_dict_twoAmp["slow amplitude"])
+                        signal_fastAmp_twoAmp.append(pulse_dict_twoAmp["fast amplitude"])
+                                            
+                        signal_chis_spike.append(pulse_dict_spike["chi"])
+                        signal_amp_spike.append(pulse_dict_spike["amplitude"])
+                        
+                        signalBand_twoamp_pulse_dict_list.append(pulse_dict_twoAmp)
+
+                        
+                    elif (pulse_dict_oneAmp["chi"] > 10**4 
+                          and pulse_dict_oneAmp["amplitude"] > 0 
+                          and pulse_dict_oneAmp["chi"] > loglog_line(pulse_dict_oneAmp["amplitude"], fe_spike_points_below  )):
+                    #spike band
+                        spike_chis_oneAmp.append(pulse_dict_oneAmp["chi"])
+                        spike_amp_oneAmp.append(pulse_dict_oneAmp["amplitude"])
+                        
+                        spike_chis_twoAmp.append(pulse_dict_twoAmp["chi"])
+                        spike_slowAmp_twoAmp.append(pulse_dict_twoAmp["slow amplitude"])
+                        spike_fastAmp_twoAmp.append(pulse_dict_twoAmp["fast amplitude"])
+                                            
+                        spike_chis_spike.append(pulse_dict_spike["chi"])
+                        spike_amp_spike.append(pulse_dict_spike["amplitude"])
+                    
+                    elif (pulse_dict_oneAmp["chi"] > 2000 
+                          and pulse_dict_oneAmp["amplitude"] > 0 
+                          and pulse_dict_oneAmp["chi"] > cut_parab(pulse_dict_oneAmp["amplitude"], (a2,c2))
+                          and pulse_dict_oneAmp["chi"] < loglog_line(pulse_dict_oneAmp["amplitude"], fe_PU_points_above ) ):
+                   #PU
+                        PU_chis_oneAmp.append(pulse_dict_oneAmp["chi"])
+                        PU_amp_oneAmp.append(pulse_dict_oneAmp["amplitude"])
+                        
+                        PU_chis_twoAmp.append(pulse_dict_twoAmp["chi"])
+                        PU_slowAmp_twoAmp.append(pulse_dict_twoAmp["slow amplitude"])
+                        PU_fastAmp_twoAmp.append(pulse_dict_twoAmp["fast amplitude"])
+                                            
+                        PU_chis_spike.append(pulse_dict_spike["chi"])
+                        PU_amp_spike.append(pulse_dict_spike["amplitude"])
+                    elif pulse_dict_oneAmp["amplitude"] > 0:
+                        #misc
+                        misc_chis_oneAmp.append(pulse_dict_oneAmp["chi"])
+                        misc_amp_oneAmp.append(pulse_dict_oneAmp["amplitude"])
+                        
+                        misc_chis_twoAmp.append(pulse_dict_twoAmp["chi"])
+                        misc_slowAmp_twoAmp.append(pulse_dict_twoAmp["slow amplitude"])
+                        misc_fastAmp_twoAmp.append(pulse_dict_twoAmp["fast amplitude"])
+                                            
+                        misc_chis_spike.append(pulse_dict_spike["chi"])
+                        misc_amp_spike.append(pulse_dict_spike["amplitude"])
+                
                         
         fig = pl.figure()
         ax = pl.gca()
@@ -682,13 +735,99 @@ def compareFitResults(list_of_pulse_dict_list1, list_of_pulse_dict_list2, list_o
         ax.plot(misc_slowAmp_twoAmp , misc_fastAmp_twoAmp, '.', c='black', markeredgecolor='none')
 #        ax.set_yscale('log')
 #        ax.set_xscale('log')
-        ax.set_xlabel('Slow Amplitude in Two Template Fit')
-        ax.set_ylabel('Spike Amplitude in Two Template Fit')
+        ax.set_ylabel('Slow Amplitude in Two Template Fit')
+        ax.set_xlabel('Spike Amplitude in Two Template Fit')
         ax.minorticks_on()
         ax.set_ylim([0, 500])
         ax.set_xlim([0, 200])
         pl.show()
         
+        fig6 = pl.figure()
+        ax = pl.gca()
+        ax.plot(signal_slowAmp_twoAmp , signal_fastAmp_twoAmp  , '.', c='red', markeredgecolor='none')
+        ax.plot(spike_slowAmp_twoAmp, spike_fastAmp_twoAmp, '.', c='orange', markeredgecolor='none')
+        ax.plot(PU_slowAmp_twoAmp ,  PU_fastAmp_twoAmp, '.', c='blue', markeredgecolor='none')
+        ax.plot(misc_slowAmp_twoAmp , misc_fastAmp_twoAmp, '.', c='black', markeredgecolor='none')
+        ax.set_yscale('log')
+        ax.set_xscale('log')
+        ax.set_ylabel('Slow Amplitude in Two Template Fit')
+        ax.set_xlabel('Spike Amplitude in Two Template Fit')
+        ax.minorticks_on()
+#        ax.set_ylim([0, 500])
+#        ax.set_xlim([0, 200])
+        pl.show()
+        
+        
+        fig7 = pl.figure()
+        ax = pl.gca()
+        ax.plot(signal_slowAmp_twoAmp , signal_fastAmp_twoAmp  , '.', c='red', markeredgecolor='none')
+        ax.plot(spike_slowAmp_twoAmp, spike_fastAmp_twoAmp, '.', c='orange', markeredgecolor='none')
+        ax.plot(PU_slowAmp_twoAmp ,  PU_fastAmp_twoAmp, '.', c='blue', markeredgecolor='none')
+        ax.plot(misc_slowAmp_twoAmp , misc_fastAmp_twoAmp, '.', c='black', markeredgecolor='none')
+#        ax.set_yscale('log')
+#        ax.set_xscale('log')
+        ax.set_ylabel('Slow Amplitude in Two Template Fit')
+        ax.set_xlabel('Spike Amplitude in Two Template Fit')
+        ax.minorticks_on()
+        ax.set_ylim([0, 500])
+        ax.set_xlim([0, 5*10**2])
+        pl.show()
+        
+        signal_slowAmp_twoAmp = np.asarray(signal_slowAmp_twoAmp)
+        signal_fastAmp_twoAmp = np.asarray(signal_fastAmp_twoAmp)
+        spike_slowAmp_twoAmp = np.asarray(spike_slowAmp_twoAmp)
+        spike_fastAmp_twoAmp = np.asarray(spike_fastAmp_twoAmp)
+        PU_slowAmp_twoAmp = np.asarray(PU_slowAmp_twoAmp)
+        PU_fastAmp_twoAmp = np.asarray(PU_fastAmp_twoAmp)
+        misc_slowAmp_twoAmp = np.asarray(misc_slowAmp_twoAmp)
+        misc_fastAmp_twoAmp = np.asarray(misc_fastAmp_twoAmp)
+        
+        fig8 = pl.figure()
+        ax = pl.gca()
+        ax.plot(signal_slowAmp_twoAmp , signal_fastAmp_twoAmp/signal_slowAmp_twoAmp  , '.', c='red', markeredgecolor='none')
+        ax.plot(spike_slowAmp_twoAmp, spike_fastAmp_twoAmp/spike_slowAmp_twoAmp, '.', c='orange', markeredgecolor='none')
+        ax.plot(PU_slowAmp_twoAmp ,  PU_fastAmp_twoAmp/PU_slowAmp_twoAmp, '.', c='blue', markeredgecolor='none')
+        ax.plot(misc_slowAmp_twoAmp , misc_fastAmp_twoAmp/misc_slowAmp_twoAmp, '.', c='black', markeredgecolor='none')
+        ax.set_yscale('log')
+#        ax.set_xscale('log')
+        ax.set_ylabel('Slow Amp/Spike Amp in Two Template Fit')
+        ax.set_xlabel('Spike Amplitude in Two Template Fit')
+        ax.minorticks_on()
+#        ax.set_ylim([0, 500])
+        ax.set_xlim([0, 5*10**2])
+        pl.show()
+        
+
+        fig9 = pl.figure()
+        ax = pl.gca()
+        ax.plot(signal_slowAmp_twoAmp/signal_fastAmp_twoAmp , signal_fastAmp_twoAmp*1.092 + signal_slowAmp_twoAmp*0.00133  , '.', c='red', markeredgecolor='none')
+        ax.plot(spike_slowAmp_twoAmp/spike_fastAmp_twoAmp, spike_fastAmp_twoAmp*1.092 + spike_slowAmp_twoAmp*0.00133 , '.', c='orange', markeredgecolor='none')
+        ax.plot(PU_slowAmp_twoAmp/PU_fastAmp_twoAmp ,  PU_fastAmp_twoAmp*1.092 + PU_slowAmp_twoAmp*0.00133 , '.', c='blue', markeredgecolor='none')
+        ax.plot(misc_slowAmp_twoAmp/misc_fastAmp_twoAmp , misc_fastAmp_twoAmp*1.092 + misc_slowAmp_twoAmp*0.00133 , '.', c='black', markeredgecolor='none')
+        ax.set_yscale('log')
+        ax.set_xscale('log')
+        ax.set_xlabel('Spike Amp/Slow Amp in Two Template Fit')
+        ax.set_ylabel('Integral of Two Template Fit')
+        ax.minorticks_on()
+        ax.set_ylim([10**-1, 10**3])
+        ax.set_xlim([10**-2, 10**4])
+        pl.show()
+        
+        fig99 = pl.figure()
+        ax = pl.gca()
+        ax.plot(signal_slowAmp_twoAmp/signal_fastAmp_twoAmp , signal_amp_oneAmp  , '.', c='red', markeredgecolor='none')
+        ax.plot(spike_slowAmp_twoAmp/spike_fastAmp_twoAmp, spike_amp_oneAmp , '.', c='orange', markeredgecolor='none')
+        ax.plot(PU_slowAmp_twoAmp/PU_fastAmp_twoAmp ,  PU_amp_oneAmp , '.', c='blue', markeredgecolor='none')
+        ax.plot(misc_slowAmp_twoAmp/misc_fastAmp_twoAmp , misc_amp_oneAmp , '.', c='black', markeredgecolor='none')
+        ax.set_yscale('log')
+        ax.set_xscale('log')
+        ax.set_xlabel('Spike Amp/Slow Amp in Two Template Fit')
+        ax.set_ylabel('Integral of Two Template Fit')
+        ax.minorticks_on()
+        ax.set_ylim([10**-1, 10**3])
+        ax.set_xlim([10**-2, 10**4])
+        pl.show()
+
         
         print "Total pulses", (len(signal_amp_oneAmp) + len(spike_amp_oneAmp) + len(PU_amp_oneAmp)+ len(misc_amp_oneAmp))
 #        analyzeFitResults([signalBand_twoamp_pulse_dict_list])
@@ -937,11 +1076,10 @@ def newFitComparison(list_ofPulse_Dict_Lists, list_ofNoisePSDs , templateFunc):
 
     
 
-file_name = 'data_run42_dbz1/20180315_14h24' #No source#
-#file_name = 'data_run42_dbz1/20180313_18h32' #good Ba 14 chunks run
-#file_name = 'data_run42_dbz1/20180314_16h12' #Neutrons 16 chunks
+file_name = 'data_run42_dbz1/20180315_14h24'; source = "Fe"; #No source#
+#file_name = 'data_run42_dbz1/20180313_18h32'; source = "Barium"; #good Ba 14 chunks run
+#file_name = 'data_run42_dbz1/20180314_16h12'; source = "Neutron";  #Neutrons 16 chunks
 #source = "Neutron" #or "Barium", Neutron, or Fe
-source = "Fe"
 chunk_size = 1
 chunk_number = 14
 if (source == "Barium"): chunk_number = 14 #total number of chunks
@@ -1055,7 +1193,7 @@ for i in range(chunk_number):
     list_new_oneAmpResults.append(newT_oneamp)
     list_new_twoAmpResults.append(newT_twoamp) 
 
-    
+
 
 #Tr_fit = 0.008
 #Tf_fit = 1.1
@@ -1065,37 +1203,37 @@ for i in range(chunk_number):
 ##reFit_optimalFiltering1amp(list_oneAmpResults, list_NoisePSDs )
 ##assert False
 
-print "====================================================="
-print "ALL POSITIVE AMPLITUDE PULSES"
-print "====================================================="
-analyzeFitResults(list_oneAmpResults_posAmps)
-#compareFitResults(list_oneAmpResults, list_twoAmpResults, list_spikeResults)
-compareFitResults(list_oneAmpResults, list_new_twoAmpResults, list_spikeResults)
+#print "====================================================="
+#print "ALL POSITIVE AMPLITUDE PULSES"
+#print "====================================================="
+#analyzeFitResults(list_oneAmpResults_posAmps)
+##compareFitResults(list_oneAmpResults, list_twoAmpResults, list_spikeResults)
+#compareFitResults(list_oneAmpResults, list_new_twoAmpResults, list_spikeResults)
 #PCAtemplate(list_oneAmpResults_posAmps)
 #spectralClusterPulses(list_oneAmpResults_posAmps)
-print "====================================================="
-print "SIGNAL BAND PULSES ONLY"
-print "====================================================="
-analyzeFitResults(list_new_twoAmpResults)
-
-
+#print "====================================================="
+#print "SIGNAL BAND PULSES ONLY"
+#print "====================================================="
 #analyzeFitResults(list_oneAmpResults_signal)
-#Nu_pc0_signal = PCAtemplate(list_oneAmpResults_signal)
 #
 #
-##print "====================================================="
-##print "POTENTIAL PILE UP PULSES ONLY"
-##print "====================================================="
-##analyzeFitResults(list_oneAmpResults_PU)
-##PCAtemplate(list_oneAmpResults_PU)
-##t_plot = np.linspace(0,1,int(fe))
-##counter = 0
-##for r in list_oneAmpResults_PU:
-##    for i in r:
-##        pl.plot(t_plot, i["obs pulse"], label='Pulse number ' + str(counter) )
-##        pl.legend()
-##        pl.show()
-##        counter+=1
+##analyzeFitResults(list_oneAmpResults_signal)
+##Nu_pc0_signal = PCAtemplate(list_oneAmpResults_signal)
+##
+##
+###print "====================================================="
+###print "POTENTIAL PILE UP PULSES ONLY"
+###print "====================================================="
+###analyzeFitResults(list_oneAmpResults_PU)
+###PCAtemplate(list_oneAmpResults_PU)
+###t_plot = np.linspace(0,1,int(fe))
+###counter = 0
+###for r in list_oneAmpResults_PU:
+###    for i in r:
+###        pl.plot(t_plot, i["obs pulse"], label='Pulse number ' + str(counter) )
+###        pl.legend()
+###        pl.show()
+###        counter+=1
 #print "====================================================="
 #print "POTENTIAL SPIKE BAND PULSES ONLY"
 #print "====================================================="

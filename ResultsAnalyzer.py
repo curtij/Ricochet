@@ -267,9 +267,11 @@ def analyzeFitResults(list_ofPulse_Dict_Lists):
         pl.ylabel('Chi Sq')
         pl.show()
         
-        pl.scatter(slow_amps, fast_amps)
+        pl.scatter(slow_amps, fast_amps, c="black", marker=".")
         pl.xlabel('Slow Amplitude')
         pl.ylabel('Fast Amplitude')
+        pl.xlim([0,200])
+        pl.ylim([0,500])
         pl.show()
         
         pl.scatter(ratio, chis)
@@ -628,7 +630,7 @@ def compareFitResults(list_of_pulse_dict_list1, list_of_pulse_dict_list2, list_o
         ax.set_xlabel('Amplitude of One Amplitude Fit')
         ax.set_ylabel('Delta Chi Sq. (Two Amp - One Amp)')
         ax.minorticks_on()
-        ax.set_ylim([-500*2, 500*2])
+#        ax.set_ylim([-500*2, 500*2])
         ax.set_xlim([0, 200])
         pl.show()
         
@@ -638,7 +640,7 @@ def compareFitResults(list_of_pulse_dict_list1, list_of_pulse_dict_list2, list_o
         ax.set_xlabel('Amplitude of One Amplitude Fit')
         ax.set_ylabel('Delta Chi Sq. (Two Amp - One Amp)')
         ax.minorticks_on()
-        ax.set_ylim([-500*2, 500*2])
+#        ax.set_ylim([-500*2, 500*2])
         ax.set_xlim([0, 200])
         pl.show()
         
@@ -672,11 +674,26 @@ def compareFitResults(list_of_pulse_dict_list1, list_of_pulse_dict_list2, list_o
         ax.set_xlim([0, 200])
         pl.show()
         
+        fig6 = pl.figure()
+        ax = pl.gca()
+        ax.plot(signal_slowAmp_twoAmp , signal_fastAmp_twoAmp  , '.', c='red', markeredgecolor='none')
+        ax.plot(spike_slowAmp_twoAmp, spike_fastAmp_twoAmp, '.', c='orange', markeredgecolor='none')
+        ax.plot(PU_slowAmp_twoAmp ,  PU_fastAmp_twoAmp, '.', c='blue', markeredgecolor='none')
+        ax.plot(misc_slowAmp_twoAmp , misc_fastAmp_twoAmp, '.', c='black', markeredgecolor='none')
+#        ax.set_yscale('log')
+#        ax.set_xscale('log')
+        ax.set_xlabel('Slow Amplitude in Two Template Fit')
+        ax.set_ylabel('Spike Amplitude in Two Template Fit')
+        ax.minorticks_on()
+        ax.set_ylim([0, 500])
+        ax.set_xlim([0, 200])
+        pl.show()
+        
         
         print "Total pulses", (len(signal_amp_oneAmp) + len(spike_amp_oneAmp) + len(PU_amp_oneAmp)+ len(misc_amp_oneAmp))
-        analyzeFitResults([signalBand_twoamp_pulse_dict_list])
+#        analyzeFitResults([signalBand_twoamp_pulse_dict_list])
                     
-def PCAtemplate(list_ofPulse_Dict_Lists, center_data = False):
+def PCAtemplate(list_ofPulse_Dict_Lists, list_ofNoisePSDs = []):
     chis=[]
     peaks=[]
     obs_pulses=[]
@@ -687,7 +704,16 @@ def PCAtemplate(list_ofPulse_Dict_Lists, center_data = False):
     amps=[]
     delays=[]
     errors=[]
-    for run in list_ofPulse_Dict_Lists:
+    
+    obs_fouriers = []
+    weighted_fouriers = []
+    
+    list_ofNoisePSDs_sqrts = []
+    for i in list_ofNoisePSDs:
+        list_ofNoisePSDs_sqrts.append(np.sqrt(i))
+    
+    for r in range(len(list_ofPulse_Dict_Lists)):
+        run = list_ofPulse_Dict_Lists[r]
         for result in run: #result = a pulse
             chis.append(result.get("chi")    )
             peaks.append(result.get("peak")    )
@@ -699,74 +725,21 @@ def PCAtemplate(list_ofPulse_Dict_Lists, center_data = False):
             times.append( result.get("time")   )
             delays.append(result.get("delay") )
             errors.append(result.get("amp error") )
+            
+            obs_fourier = np.fft.fft(result.get("obs pulse"))
+            weighted_fourier = obs_fourier/(list_ofNoisePSDs_sqrts[r])
+            
+            obs_fouriers.append(obs_fourier)
+            weighted_fouriers.append(weighted_fourier)
+            
     
     if len(obs_pulses) == 0:
         print "NO PULSES FOUND"
         return
-    pulse_matrix = np.asarray(obs_pulses)
-    mean_pulse=[]
-#    centered_pulse_matrix
-    mean_pulse = np.mean(obs_pulses, axis=0) 
-    centered_pulse_matrix = pulse_matrix - mean_pulse
-    svd_output = np.linalg.svd(centered_pulse_matrix)
     
-#    print "\n PCA Time Domain Centered\n"
-#    
-#    (u, s, vh) = svd_output
-#    print "lengths", len(vh[0]), len(u[:,0])
-#    print np.shape(u), np.shape(vh)
-#    one_second_interval = np.linspace(0,1, int(fe))
-#    signal_shape = []
-#    for i in range(6):
-#        standard_template = theta_exp(one_second_interval, (0.24, 0.008,1.1))
-#        standard_template_max = max(standard_template)
-#        
-#        zeroed_vector = vh[i] - vh[i][0]
-##        zeroed_vector[0:int(0.225*fe)] = 0
-#        if max(np.abs(zeroed_vector)) == max(zeroed_vector):
-#            scaling = standard_template_max/max(zeroed_vector)
-#        else:
-#            scaling = standard_template_max/min(zeroed_vector)
-#        scaled_vector = scaling*zeroed_vector
-#        try:
-#            if i==0:
-##                fit = curve_fit(A_theta_exp, one_second_interval, scaled_vector, (1.0, 0.24, 0.008,1.1))
-#                fit = curve_fit(A_theta_exp, one_second_interval, scaled_vector, (1.0, 0.14, 0.008,0.04))
-#                print fit
-#                pl.plot(one_second_interval, A_theta_exp(one_second_interval, 1.0, 0.24, 0.008,1.1), label='Initial Guess')
-#                pl.plot(one_second_interval, scaled_vector, label = 'Principal Component 0', color='b')
-#                pl.plot(one_second_interval, fit[0][0]*theta_exp(one_second_interval, fit[0][1:]) , label='Best Fit', color='r')
-#                pl.legend()
-#                pl.show()
-#                print "Best Params", fit[0]
-#                print "Initial Guess Rise and Fall times", 0.008, 1.1
-#                print "Best rise time: ", fit[0][2], " +- ", np.sqrt(fit[1][2][2])
-#                print "Best Fall time: ", fit[0][3], " +- ", np.sqrt(fit[1][3][3])
-#                print "Cov of Rise Time", fit[1][2]
-#                print "Cov of Fall Time", fit[1][3]
-#    #            print "Cov Matrix", fit[1]
-#    #            signal_shape = 
-#        except:
-#            print "Fit failed on principal component 0"
-#            
-#        pl.plot(one_second_interval, scaled_vector, label= "Principal Component " + str(i) , color = 'b')
-#        pl.plot(one_second_interval, standard_template , label='Template', color = 'r')
-#        pl.xlabel('Time [s]')
-#        pl.ylabel('Amplitude [ADU]')
-#        pl.legend()
-#        pl.show()
-#        
-#    lambdas = s**2
-#    print lambdas[0:20]/(sum(lambdas[0:20]))
-        
-
-    save_principal_0 = []    
+    save_principal_0 = []   
+    
     print "\n PCA Freq Domain centered\n"
-    obs_fouriers = []
-    for i in obs_pulses:
-        obs_fouriers.append(np.fft.fft(i))
-    print "hi1"
-#    obs_fouriers = np.asarray(obs_fouriers )
     mean_fourier = np.mean(obs_fouriers, axis=0) 
     centered_fourier_matrix = obs_fouriers - mean_fourier
     (u, s, vh) = np.linalg.svd(centered_fourier_matrix)
@@ -776,6 +749,7 @@ def PCAtemplate(list_ofPulse_Dict_Lists, center_data = False):
     one_second_interval = np.linspace(0,1, int(fe))
     print type(u), type(s), type(vh)
     print type(vh[0]), type(vh[0][0])
+    
     for i in range(6):
         standard_template = theta_exp(one_second_interval, (0.24, 0.008,1.1))
         standard_template_max = max(standard_template)
@@ -837,11 +811,81 @@ def PCAtemplate(list_ofPulse_Dict_Lists, center_data = False):
         
     lambdas = s**2
     print lambdas[0:20]/(sum(lambdas[0:20]))
-    (u, s, vh) = np.linalg.svd(centered_pulse_matrix)
-    return save_principal_0
+    
+    print "\n PCA Noise Weighted centered\n"
+    mean_fourier = np.mean(weighted_fouriers, axis=0) 
+    centered_fourier_matrix = weighted_fouriers - mean_fourier
+    (u, s, vh) = np.linalg.svd(centered_fourier_matrix)
+    print "hi2"
+    print "lengths", len(vh[0]), len(u[:,0])
+    print np.shape(u), np.shape(vh)
+    one_second_interval = np.linspace(0,1, int(fe))
+    print type(u), type(s), type(vh)
+    print type(vh[0]), type(vh[0][0])
+    
+    save_principal_1 = []
+    for i in range(6):
+        standard_template = theta_exp(one_second_interval, (0.24, 0.008,1.1))
+        standard_template_max = max(standard_template)
+        
+        vector = np.real(np.fft.ifft(vh[i]))
+        zeroed_vector = vector - vector[0]
+        if max(np.abs(zeroed_vector)) == max(zeroed_vector):
+            scaling = standard_template_max/max(zeroed_vector)
+        else:
+            scaling = standard_template_max/min(zeroed_vector)
+        scaled_vector = scaling*zeroed_vector
+#        scaled_vector[int(0.2*fe):] = 0
+        try:
+            if i==0:
+                fit = curve_fit(A_theta_exp, one_second_interval, scaled_vector, (1.0, 0.24, 0.008,1.1))
+#                fit = curve_fit(A_theta_exp, one_second_interval, scaled_vector, (1.0, 0.14, 0.008,0.04))
+                print fit
+                save_principal_1 = scaled_vector
+                pl.plot(one_second_interval, scaled_vector, label = 'Principal Component 0', color='b')
+                pl.plot(one_second_interval, standard_template, label='Initial Guess')
+                pl.plot(one_second_interval, fit[0][0]*theta_exp(one_second_interval, fit[0][1:]) , label='Best Fit', color='r')
+                pl.legend()
+                pl.show()
+                print "RSS error of best fit", sum( (fit[0][0]*theta_exp(one_second_interval, fit[0][1:]) - scaled_vector)**2 )
+                print "RSS error of initial guess fit", sum( (standard_template - scaled_vector)**2 )
+                print "Best Params", fit[0]
+                print "Best rise time: ", fit[0][2], " +- ", np.sqrt(fit[1][2][2])
+                print "Best Fall time: ", fit[0][3], " +- ", np.sqrt(fit[1][3][3])
+                print "Cov of Rise Time", fit[1][2]
+                print "Cov of Fall Time", fit[1][3]
+                print "Cov Matrix", fit[1]
+                
+                fit2 = curve_fit(AB_theta_exp, one_second_interval, scaled_vector, (0.24, 0.008,1.1, 2.5, 0.5, 0.5), 
+                bounds=([0.23, 0, 0, 0, 0, 0], [0.25, 0.1 , 2, 3, 1, 1]))
+                
+                pl.plot(one_second_interval, scaled_vector, label = 'Principal Component 0', color='b')
+                pl.plot(one_second_interval, AB_theta_exp(one_second_interval, 0.24, 0.008,1.1, 2.5, 0.5, 0.5), label='Initial Guess 2 Amp')
+                pl.plot(one_second_interval, AB_theta_exp(one_second_interval, fit2[0][0], fit2[0][1], fit2[0][2], fit2[0][3], fit2[0][4], fit2[0][5])  , label='Best Fit 2 Amp', color='r')
+                pl.legend()
+                pl.show()
+                print "RSS error of best fit", sum( (AB_theta_exp(one_second_interval, fit2[0][0], fit2[0][1], fit2[0][2], fit2[0][3], fit2[0][4], fit2[0][5]) - scaled_vector)**2 )
+                print "Best Params", fit2[0]
+                print "Best rise time: ", fit2[0][1], " +- ", np.sqrt(fit2[1][1][1])
+                print "Best Fall time 1: ", fit2[0][2], " +- ", np.sqrt(fit2[1][2][2])
+                print "Best Fall time 2: ", fit2[0][3], " +- ", np.sqrt(fit2[1][3][3]) 
+                print "Cov Matrix", fit2[1]
+        except:
+            print "Fit failed on principal component 0"
+#            
+        pl.plot(one_second_interval, scaled_vector, label= "Principal Component " + str(i) , color = 'b')
+        pl.plot(one_second_interval, standard_template , label='Template', color = 'r')
+        pl.xlabel('Time [s]')
+        pl.ylabel('Amplitude [ADU]')
+        pl.legend()
+        pl.show()
+    
+#    (u, s, vh) = np.linalg.svd(centered_pulse_matrix)
+    return save_principal_0, save_principal_1
 #    print "\n PCA Freq Domain Centered\n"
+    
 
-def spectralClusterPulses(list_ofPulse_Dict_Lists, center_data = False):
+def newFitComparison(list_ofPulse_Dict_Lists, list_ofNoisePSDs , templateFunc):
     chis=[]
     peaks=[]
     obs_pulses=[]
@@ -852,7 +896,13 @@ def spectralClusterPulses(list_ofPulse_Dict_Lists, center_data = False):
     amps=[]
     delays=[]
     errors=[]
-    for run in list_ofPulse_Dict_Lists:
+    
+    one_sec = np.linspace(0,1,1000)
+    
+    obs_fouriers = []
+    weighted_fouriers = []
+    for r in range(len(list_ofPulse_Dict_Lists)):
+        run = list_ofPulse_Dict_Lists[r]
         for result in run: #result = a pulse
             chis.append(result.get("chi")    )
             peaks.append(result.get("peak")    )
@@ -864,28 +914,42 @@ def spectralClusterPulses(list_ofPulse_Dict_Lists, center_data = False):
             times.append( result.get("time")   )
             delays.append(result.get("delay") )
             errors.append(result.get("amp error") )
-
-    pulse_matrix = np.asarray(obs_pulses)
-    mean_pulse=[]
-    if center_data:
-        mean_pulse = np.mean(obs_pulses, axis=0) 
-        centered_pulse_matrix = pulse_matrix - mean_pulse
-#    svd_output = np.linalg.svd(pulse_matrix)
-    clustering = cluster.SpectralClustering(n_clusters=4, random_state=0).fit(pulse_matrix)
-    print clustering
-    clustering.labels_
+            
+#            obs_fourier = np.fft.fft(result.get("obs pulse"))
+#            weighted_fourier = obs_fourier/np.sqrt(list_ofNoisePSDs[r])
+#            
+#            obs_fouriers.append(obs_fourier)
+#            weighted_fouriers.append(weighted_fourier)
+#            
+#            for t in range 
+#                template_vals ...
+#                get_windowed_fft...
+#                Coeffs
+#                a_hat
+#                chi_squared
+#                if chi_sq is min:
+#                    a_hat0 = ahat
     
     
 
-#file_name = 'data_run42_dbz1\\20180315_14h24' #No source#
-#file_name = 'data_run42_dbz1\\20180313_18h32' #good Ba 12 chunks, 14 ss run
-file_name = 'data_run42_dbz1\\20180314_16h12' #Neutrons 15 run1, 16 ss run
-source = "Neutron" #or "Barium", Neutron, or Fe
+    
+
+
+    
+
+file_name = 'data_run42_dbz1/20180315_14h24' #No source#
+#file_name = 'data_run42_dbz1/20180313_18h32' #good Ba 14 chunks run
+#file_name = 'data_run42_dbz1/20180314_16h12' #Neutrons 16 chunks
+#source = "Neutron" #or "Barium", Neutron, or Fe
+source = "Fe"
 chunk_size = 1
-chunk_number = 16 #total number of chunks
+chunk_number = 14
+if (source == "Barium"): chunk_number = 14 #total number of chunks
+elif (source == "Neutron"): chunk_number = 16
+    
 #folder_header = 'Results/' + file_name + '/' +str(chunk_size) + 'hours_'  #original runs
 #folder_header = 'Results/' + 'standardized_starts/'+ file_name + '/' +str(chunk_size) + 'hours_'  #runs w standardized pulse start times
-folder_header = 'Results/' + 'with_spike/'+ file_name + '/' +str(chunk_size) + 'hours_'  #runs w standardized pulse start times
+folder_header = 'Results/' + 'test0/'+ file_name + '/' +str(chunk_size) + 'hours_'  #runs w standardized pulse start times
 #folder_header = 'Results/' + 'with_spike2/'+ file_name + '/' +str(chunk_size) + 'hours_'  #runs w standardized pulse start times
 
 
@@ -916,6 +980,9 @@ list_NoisePSDs = []
 list_twoAmpResults = []
 list_spikeResults = []
 list_oneAmpResults_blob = []
+list_new_twoAmpResults = []
+list_new_oneAmpResults = []
+
 
 ##list_freqs = []
 for i in range(chunk_number):
@@ -924,9 +991,9 @@ for i in range(chunk_number):
 #    with open(directory + 'oneAMP_pulse_processing_results.p', 'rb') as fp1:
 #        oneAmp_processed_results = pickle.load(fp1)
     with open(directory + 'full_pulse_processing_results.p', 'rb') as fp1:
-#        (oneAmp_processed_results, twoAmp_processed_results, spike_processed_results, newT_oneamp, bq) = pickle.load(fp1)
+        (oneAmp_processed_results, twoAmp_processed_results, spike_processed_results, newT_oneamp, newT_twoamp) = pickle.load(fp1)
 #        (oneAmp_processed_results, twoAmp_processed_results, newT_oneamp , spike_processed_results, bq) = pickle.load(fp1)
-        (oneAmp_processed_results, twoAmp_processed_results, spike_processed_results) = pickle.load(fp1)
+#        (oneAmp_processed_results, twoAmp_processed_results, spike_processed_results) = pickle.load(fp1)
 #        (oneAmp_processed_results, twoAmp_processed_results) = pickle.load(fp1)
     with open(directory + 'NoisePSD.p', 'rb') as fp2:
         (freq, J) = pickle.load(fp2)
@@ -983,7 +1050,11 @@ for i in range(chunk_number):
     list_NoisePSDs.append( J )
     
     list_twoAmpResults.append(twoAmp_processed_results)
-#    list_spikeResults.append(spike_processed_results)
+    list_spikeResults.append(spike_processed_results)
+    
+    list_new_oneAmpResults.append(newT_oneamp)
+    list_new_twoAmpResults.append(newT_twoamp) 
+
     
 
 #Tr_fit = 0.008
@@ -994,16 +1065,20 @@ for i in range(chunk_number):
 ##reFit_optimalFiltering1amp(list_oneAmpResults, list_NoisePSDs )
 ##assert False
 
-#print "====================================================="
-#print "ALL POSITIVE AMPLITUDE PULSES"
-#print "====================================================="
-#analyzeFitResults(list_oneAmpResults_posAmps)
-##compareFitResults(list_oneAmpResults, list_twoAmpResults, list_spikeResults)
-##PCAtemplate(list_oneAmpResults_posAmps)
-##spectralClusterPulses(list_oneAmpResults_posAmps)
-#print "====================================================="
-#print "SIGNAL BAND PULSES ONLY"
-#print "====================================================="
+print "====================================================="
+print "ALL POSITIVE AMPLITUDE PULSES"
+print "====================================================="
+analyzeFitResults(list_oneAmpResults_posAmps)
+#compareFitResults(list_oneAmpResults, list_twoAmpResults, list_spikeResults)
+compareFitResults(list_oneAmpResults, list_new_twoAmpResults, list_spikeResults)
+#PCAtemplate(list_oneAmpResults_posAmps)
+#spectralClusterPulses(list_oneAmpResults_posAmps)
+print "====================================================="
+print "SIGNAL BAND PULSES ONLY"
+print "====================================================="
+analyzeFitResults(list_new_twoAmpResults)
+
+
 #analyzeFitResults(list_oneAmpResults_signal)
 #Nu_pc0_signal = PCAtemplate(list_oneAmpResults_signal)
 #
@@ -1042,105 +1117,100 @@ for i in range(chunk_number):
 #        pl.show()
 #        counter+=1
         
-        
-with open('Nu_pc0s.p', 'rb') as fp:
-        (Nu_pc0_signal, Nu_pc0_spike) = pickle.load(fp)
-with open('Ba_pc0s.p', 'rb') as fp:
-        (Ba_pc0_signal, Ba_pc0_spike) = pickle.load(fp)    
-with open('Fe_pc0s.p', 'rb') as fp:
-        (Fe_pc0_signal, Fe_pc0_spike) = pickle.load(fp)   
-one_sec = np.linspace(0, 1, int(fe))
-pl.plot(one_sec, Nu_pc0_signal, label="Neutron Signal PC")
-pl.plot(one_sec, Ba_pc0_signal, label="Barium Signal PC")
-pl.xlabel('Time [s]')
-pl.ylabel('Amplitude')
-pl.legend()
-pl.show()
-pl.plot(one_sec, Nu_pc0_signal, label="Neutron Signal PC")
-pl.plot(one_sec, Ba_pc0_signal, label="Barium Signal PC")
-pl.plot(one_sec, Fe_pc0_signal, label="Fe Signal PC", color='red')
-pl.xlabel('Time [s]')
-pl.ylabel('Amplitude')
-pl.legend()
-pl.show()
-pl.plot(one_sec, Nu_pc0_signal - Ba_pc0_signal, label="Neutron - Barium Signal PC")
-pl.xlabel('Time [s]')
-pl.ylabel('Amplitude')
-pl.legend()
-pl.show()
+#Compare principal components
+#with open('Nu_pc0s.p', 'rb') as fp:
+#        (Nu_pc0_signal, Nu_pc0_spike) = pickle.load(fp)
+#with open('Ba_pc0s.p', 'rb') as fp:
+#        (Ba_pc0_signal, Ba_pc0_spike) = pickle.load(fp)    
+#with open('Fe_pc0s.p', 'rb') as fp:
+#        (Fe_pc0_signal, Fe_pc0_spike) = pickle.load(fp)   
+#one_sec = np.linspace(0, 1, int(fe))
+#pl.plot(one_sec, Nu_pc0_signal, label="Neutron Signal PC")
+#pl.plot(one_sec, Ba_pc0_signal, label="Barium Signal PC")
+#pl.xlabel('Time [s]')
+#pl.ylabel('Amplitude')
+#pl.legend()
+#pl.show()
+#pl.plot(one_sec, Nu_pc0_signal, label="Neutron Signal PC")
+#pl.plot(one_sec, Ba_pc0_signal, label="Barium Signal PC")
+#pl.plot(one_sec, Fe_pc0_signal, label="Fe Signal PC", color='red')
+#pl.xlabel('Time [s]')
+#pl.ylabel('Amplitude')
+#pl.legend()
+#pl.show()
+#pl.plot(one_sec, Nu_pc0_signal - Ba_pc0_signal, label="Neutron - Barium Signal PC")
+#pl.xlabel('Time [s]')
+#pl.ylabel('Amplitude')
+#pl.legend()
+#pl.show()
+#
+#pl.plot(one_sec, Nu_pc0_signal - Fe_pc0_signal, label="Neutron - Fe Signal PC")
+#pl.xlabel('Time [s]')
+#pl.ylabel('Amplitude')
+#pl.legend()
+#pl.show()
+#
+#pl.plot(one_sec, Fe_pc0_signal - Ba_pc0_signal , label="Fe - Ba Signal PC")
+#pl.xlabel('Time [s]')
+#pl.ylabel('Amplitude')
+#pl.legend()
+#pl.show()
+#
+#fit_test = curve_fit(A_theta_exp, one_sec, Nu_pc0_signal - Ba_pc0_signal , (0.35, 0.24, 0.0007514, 0.0093262  )) 
+#pl.plot(one_sec, Nu_pc0_signal - Ba_pc0_signal, label="Neutron - Barium Signal PC")
+#pl.plot(one_sec, A_theta_exp(one_sec, 0.35, 0.24, 0.0007514, 0.0093262  ), label = 'Spike Template', color = 'black')
+##pl.plot(one_sec, A_theta_exp(one_sec, fit_test[0][0], fit_test[0][1], fit_test[0][2], fit_test[0][3] ), label = 'Best Fit', color= 'red')
+#pl.xlabel('Time [s]')
+#pl.ylabel('Amplitude')
+#pl.legend()
+#pl.show()
+#print fit_test
+#
+#pl.plot(one_sec, Nu_pc0_signal/Ba_pc0_signal, label="Neutron/Barium Signal PC")
+#pl.xlabel('Time [s]')
+#pl.legend()
+#pl.show()
+#pl.plot(one_sec, Nu_pc0_signal/Ba_pc0_signal, label="Neutron/Barium Signal PC")
+#pl.xlabel('Time [s]')
+#pl.xlim([0.25,1.0])
+#pl.ylim([0,1.5])
+#pl.legend()
+#pl.show()
+#pl.plot(one_sec, Nu_pc0_spike, label="Neutron Spike PC")
+#pl.plot(one_sec, Ba_pc0_spike, label="Barium Spike PC")
+#pl.xlabel('Time [s]')
+#pl.ylabel('Amplitude')
+#pl.legend()
+#pl.show()
+#index_nu = list(Nu_pc0_spike).index(max(Nu_pc0_spike)) 
+#index_ba = list(Ba_pc0_spike).index(max(Ba_pc0_spike)) 
+#index_fe = list(Fe_pc0_spike).index(max(Fe_pc0_spike)) 
+#
+#diff = index_ba - index_nu
+#modified_nu_spike = diff*[0] + list(Nu_pc0_spike)
+#modified_nu_spike = modified_nu_spike[0:int(fe)]
+#diff_Fe = index_ba - index_fe
+#modified_fe_spike = diff_Fe*[0] + list(Fe_pc0_spike)
+#modified_fe_spike = modified_fe_spike[0:int(fe)]
+#pl.plot(one_sec, modified_nu_spike, label="Shifted Neutron Spike PC")
+#pl.plot(one_sec, Ba_pc0_spike, label="Barium Spike PC")
+#pl.plot(one_sec, modified_fe_spike, label="Shifted Fe Spike PC", color='red')
+#pl.xlabel('Time [s]')
+#pl.ylabel('Amplitude')
+#pl.legend()
+#pl.show()
+#pl.plot(one_sec, Nu_pc0_spike-Ba_pc0_spike, label="Neutron - Barium Spike PC")
+#pl.legend()
+#pl.show()
+#pl.plot(one_sec, np.asarray(modified_nu_spike)-Ba_pc0_spike, label="Shifted Neutron - Barium Spike PC")
+#pl.legend()
+#pl.show()
+#pl.plot(one_sec, np.asarray(modified_nu_spike)-np.asarray(modified_fe_spike), label="Shifted Neutron - Shifted Fe Spike PC")
+#pl.legend()
+#pl.show()
+#pl.plot(one_sec, np.asarray(modified_fe_spike)-Ba_pc0_spike, label="Shifted Fe - Barium Spike PC")
+#pl.legend()
+#pl.show()
 
-pl.plot(one_sec, Nu_pc0_signal - Fe_pc0_signal, label="Neutron - Fe Signal PC")
-pl.xlabel('Time [s]')
-pl.ylabel('Amplitude')
-pl.legend()
-pl.show()
 
-pl.plot(one_sec, Fe_pc0_signal - Ba_pc0_signal , label="Fe - Ba Signal PC")
-pl.xlabel('Time [s]')
-pl.ylabel('Amplitude')
-pl.legend()
-pl.show()
 
-fit_test = curve_fit(A_theta_exp, one_sec, Nu_pc0_signal - Ba_pc0_signal , (0.35, 0.24, 0.0007514, 0.0093262  )) 
-pl.plot(one_sec, Nu_pc0_signal - Ba_pc0_signal, label="Neutron - Barium Signal PC")
-pl.plot(one_sec, A_theta_exp(one_sec, 0.35, 0.24, 0.0007514, 0.0093262  ), label = 'Spike Template', color = 'black')
-#pl.plot(one_sec, A_theta_exp(one_sec, fit_test[0][0], fit_test[0][1], fit_test[0][2], fit_test[0][3] ), label = 'Best Fit', color= 'red')
-pl.xlabel('Time [s]')
-pl.ylabel('Amplitude')
-pl.legend()
-pl.show()
-print fit_test
-
-pl.plot(one_sec, Nu_pc0_signal/Ba_pc0_signal, label="Neutron/Barium Signal PC")
-pl.xlabel('Time [s]')
-pl.legend()
-pl.show()
-pl.plot(one_sec, Nu_pc0_signal/Ba_pc0_signal, label="Neutron/Barium Signal PC")
-pl.xlabel('Time [s]')
-pl.xlim([0.25,1.0])
-pl.ylim([0,1.5])
-pl.legend()
-pl.show()
-pl.plot(one_sec, Nu_pc0_spike, label="Neutron Spike PC")
-pl.plot(one_sec, Ba_pc0_spike, label="Barium Spike PC")
-pl.xlabel('Time [s]')
-pl.ylabel('Amplitude')
-pl.legend()
-pl.show()
-index_nu = list(Nu_pc0_spike).index(max(Nu_pc0_spike)) 
-index_ba = list(Ba_pc0_spike).index(max(Ba_pc0_spike)) 
-index_fe = list(Fe_pc0_spike).index(max(Fe_pc0_spike)) 
-
-diff = index_ba - index_nu
-modified_nu_spike = diff*[0] + list(Nu_pc0_spike)
-modified_nu_spike = modified_nu_spike[0:int(fe)]
-diff_Fe = index_ba - index_fe
-modified_fe_spike = diff_Fe*[0] + list(Fe_pc0_spike)
-modified_fe_spike = modified_fe_spike[0:int(fe)]
-pl.plot(one_sec, modified_nu_spike, label="Shifted Neutron Spike PC")
-pl.plot(one_sec, Ba_pc0_spike, label="Barium Spike PC")
-pl.plot(one_sec, modified_fe_spike, label="Shifted Fe Spike PC", color='red')
-pl.xlabel('Time [s]')
-pl.ylabel('Amplitude')
-pl.legend()
-pl.show()
-pl.plot(one_sec, Nu_pc0_spike-Ba_pc0_spike, label="Neutron - Barium Spike PC")
-pl.legend()
-pl.show()
-pl.plot(one_sec, np.asarray(modified_nu_spike)-Ba_pc0_spike, label="Shifted Neutron - Barium Spike PC")
-pl.legend()
-pl.show()
-pl.plot(one_sec, np.asarray(modified_nu_spike)-np.asarray(modified_fe_spike), label="Shifted Neutron - Shifted Fe Spike PC")
-pl.legend()
-pl.show()
-pl.plot(one_sec, np.asarray(modified_fe_spike)-Ba_pc0_spike, label="Shifted Fe - Barium Spike PC")
-pl.legend()
-pl.show()
-#with open('pulses/no_source315/second5h/full_pulse_processing_results_second5h.p', 'rb') as fp2:
-#    (oneAmp_processed_results2, twoAmp_processed_results2) = pickle.load(fp2)
-##with open('pulses/no_source315/remaining_hours/full_pulse_processing_results_last.p', 'rb') as fp3:
-##    (oneAmp_processed_results3, twoAmp_processed_results3) = pickle.load(fp3)
-#analyzeFitResults([oneAmp_processed_results1, oneAmp_processed_results2])
-#analyzeFitResults([getPulseSubset(oneAmp_processed_results1, [("chi", 300,800), ("amplitude", 0, 1000) ])
-#        , getPulseSubset(oneAmp_processed_results2, [("chi", 300,800), ("amplitude", 0, 1000)  ])])           
-#assert False

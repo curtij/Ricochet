@@ -342,12 +342,12 @@ def loadVoltageFile(fname, interval_length, start_time=0, TEST=True):
     interval length is in seconds, formerly 'dt'
     returns t,V
     '''
-    pathtofile = 'DataFiles\\'+fname +'.BIN0'
+    pathtofile = 'DataFiles/'+fname +'.BIN0'
     here = os.path.dirname(os.path.abspath(__file__))
     filename = os.path.join(here, pathtofile)
     print filename
     voltages = np.memmap(filename, dtype='int16', mode='r+', offset=0, shape=(int(10*fe*start_time)+int(10*fe*interval_length),1))
-    times = np.memmap('TempFiles\\times.mymemmap', dtype='float32', mode='r+', shape=(int(10*fe*interval_length),))
+    times = np.memmap('TempFiles/times.mymemmap', dtype='float32', mode='r+', shape=(int(10*fe*interval_length),))
     index=0    
     while index < int(10*fe*interval_length):
         times[index] = index/(10*fe)
@@ -926,7 +926,7 @@ def optimalFiltering2amp(stream, pulse_locations, J, freq,t0=-0.1,temp_1=templat
 def fourier1to2sided(fourieroneside,N):
 #    onesidelist=list(fourieroneside)
     
-    twosideMemMap = np.memmap('TempFiles\\fourier1to2sided.mymemmap', dtype=np.complex64, mode='r+', shape=(N,))
+    twosideMemMap = np.memmap('TempFiles/fourier1to2sided.mymemmap', dtype=np.complex64, mode='r+', shape=(N,))
     templen = len(fourieroneside)
     twosideMemMap[0:templen] = fourieroneside[:]
     for k in range(0,int(N-len(fourieroneside))):
@@ -2333,9 +2333,9 @@ def processStream(V, t, directory):
         
     newT_twoAmp_processed_results = []
     current_template=AB_theta_exp
-#    if current_template==AB_theta_exp:
-##        newT_twoAmp_processed_results=optimalFiltering2amp(stream_active,mod_pulse_locations,J,freq, temp_1=template_slowV2, temp_2=template_fastV2)
-##        analyzeFitResults([twoAmp_processed_results])
+    if current_template==AB_theta_exp:
+        newT_twoAmp_processed_results=optimalFiltering2amp(stream_active,mod_pulse_locations,J,freq, temp_1=template_slowV2, temp_2=template_fastV2)
+        analyzeFitResults([twoAmp_processed_results])
         
     with open(directory + 'full_pulse_processing_results.p', 'wb') as fp:
         pickle.dump( (oneAmp_processed_results, twoAmp_processed_results, spike_processed_results,
@@ -2448,7 +2448,7 @@ def processFile(file_stream, chunk_size, start_chunk=0, end_chunk=-1):
     
     print "Processing File", file_stream
     for i in range(start_chunk, chunks_needed):
-        current_directory = 'Results/' + 'with_spike2/'+ file_stream + '/' +str(chunk_size) + 'hours_' + str(i) + '/'
+        current_directory = 'Results/' + 'test0/'+ file_stream + '/' +str(chunk_size) + 'hours_' + str(i) + '/'
 #        current_directory = 'Results/data_run42_dbz1/test/'
         print "Processing chunk", i , "out of", chunks_needed
         print "Current directory is", current_directory
@@ -2465,11 +2465,11 @@ def processFile(file_stream, chunk_size, start_chunk=0, end_chunk=-1):
     
 #Begin Main Code!
 
-#file1 = 'data_run42_dbz1\\20180314_16h12' #original neutron
-#file1 = 'data_run42_dbz1\\20180314_10h11' #Ba, fails after a couple hours
-#file1 = 'data_run42_dbz1\\20180313_18h32' #good Ba
-file1 = 'data_run42_dbz1\\20180315_14h24' #No source original#
-#file1 = 'data_run42_dbz1\\20180315_09h55' #SANS source post calibatration neutron# fails
+#file1 = 'data_run42_dbz1/20180314_16h12' #original neutron
+#file1 = 'data_run42_dbz1/20180314_10h11' #Ba, fails after a couple hours
+#file1 = 'data_run42_dbz1/20180313_18h32' #good Ba
+file1 = 'data_run42_dbz1/20180315_14h24' #No source original#
+#file1 = 'data_run42_dbz1/20180315_09h55' #SANS source post calibatration neutron# fails
 #print "\n\nFile: ", file1
 print ""
 voie = int(0)  #0-NTD1 ; 1-NTD2
@@ -2487,9 +2487,9 @@ Tf_spike=0.0093262
 Tr_v2=0.008965102663169616
 Tf_v2=1.057198547819129 
 
-Tr_2ampv2 = 9.14992725e-03 
-Tf1_2ampv2 = 7.09835925e-01 
-Tf2_2ampv2 = 1.44968148e+06
+Tr_2ampv2 = 0.008
+Tf1_2ampv2 = 1.1 
+Tf2_2ampv2 = 0.00933
 
 processFile(file1, chunk_size=1, start_chunk=0)
 #file2 = 'data_run42_dbz1\\20180314_16h12' #original neutron

@@ -757,6 +757,21 @@ def compareFitResults(list_of_pulse_dict_list1, list_of_pulse_dict_list2, list_o
 #        ax.set_xlim([0, 200])
         pl.show()
         
+        fig6 = pl.figure()
+        ax = pl.gca()
+#        ax.plot(signal_slowAmp_twoAmp , signal_fastAmp_twoAmp  , '.', c='red', markeredgecolor='none')
+        ax.plot(spike_slowAmp_twoAmp, spike_fastAmp_twoAmp, '.', c='orange', markeredgecolor='none')
+#        ax.plot(PU_slowAmp_twoAmp ,  PU_fastAmp_twoAmp, '.', c='blue', markeredgecolor='none')
+#        ax.plot(misc_slowAmp_twoAmp , misc_fastAmp_twoAmp, '.', c='black', markeredgecolor='none')
+        ax.set_yscale('log')
+        ax.set_xscale('log')
+        ax.set_ylabel('Slow Amplitude in Two Template Fit')
+        ax.set_xlabel('Spike Amplitude in Two Template Fit')
+        ax.minorticks_on()
+#        ax.set_ylim([0, 500])
+#        ax.set_xlim([0, 200])
+        pl.show()
+        
         
         fig7 = pl.figure()
         ax = pl.gca()
@@ -793,7 +808,7 @@ def compareFitResults(list_of_pulse_dict_list1, list_of_pulse_dict_list2, list_o
         ax.set_ylabel('Slow Amp/Spike Amp in Two Template Fit')
         ax.set_xlabel('Spike Amplitude in Two Template Fit')
         ax.minorticks_on()
-#        ax.set_ylim([0, 500])
+        ax.set_ylim([10**-5, 10**3])
         ax.set_xlim([0, 5*10**2])
         pl.show()
         
@@ -813,22 +828,71 @@ def compareFitResults(list_of_pulse_dict_list1, list_of_pulse_dict_list2, list_o
         ax.set_xlim([10**-2, 10**4])
         pl.show()
         
-        fig99 = pl.figure()
+        fig89 = pl.figure()
         ax = pl.gca()
-        ax.plot(signal_slowAmp_twoAmp/signal_fastAmp_twoAmp , signal_amp_oneAmp  , '.', c='red', markeredgecolor='none')
-        ax.plot(spike_slowAmp_twoAmp/spike_fastAmp_twoAmp, spike_amp_oneAmp , '.', c='orange', markeredgecolor='none')
-        ax.plot(PU_slowAmp_twoAmp/PU_fastAmp_twoAmp ,  PU_amp_oneAmp , '.', c='blue', markeredgecolor='none')
-        ax.plot(misc_slowAmp_twoAmp/misc_fastAmp_twoAmp , misc_amp_oneAmp , '.', c='black', markeredgecolor='none')
+        ax.plot(signal_fastAmp_twoAmp*1.092 + signal_slowAmp_twoAmp*0.00133, signal_chis_twoAmp  , '.', c='red', markeredgecolor='none')
+        ax.plot( spike_fastAmp_twoAmp*1.092 + spike_slowAmp_twoAmp*0.00133, spike_chis_twoAmp , '.', c='orange', markeredgecolor='none')
+        ax.plot(  PU_fastAmp_twoAmp*1.092 + PU_slowAmp_twoAmp*0.00133 , PU_chis_twoAmp, '.', c='blue', markeredgecolor='none')
+        ax.plot( misc_fastAmp_twoAmp*1.092 + misc_slowAmp_twoAmp*0.00133, misc_chis_twoAmp , '.', c='black', markeredgecolor='none')
         ax.set_yscale('log')
         ax.set_xscale('log')
-        ax.set_xlabel('Spike Amp/Slow Amp in Two Template Fit')
-        ax.set_ylabel('Integral of Two Template Fit')
+        ax.set_ylabel('Chi Sq. of Two Template Fit')
+        ax.set_xlabel('Integral of Two Template Fit')
         ax.minorticks_on()
-        ax.set_ylim([10**-1, 10**3])
-        ax.set_xlim([10**-2, 10**4])
+#        ax.set_ylim([10**-1, 10**3])
+#        ax.set_xlim([10**-2, 10**4])
         pl.show()
-
         
+        
+        print "now spike study"
+        amp_hist = pl.hist(spike_amp_spike, range=(0,500), bins = 50, color='black')
+        pl.xlabel('Amplitude [A.D.U.]')
+        pl.ylabel('Events')
+#        pl.xlim([0,200])
+        pl.show()    
+        
+        amp_hist = pl.hist(spike_amp_spike, range=(0,10**3), bins = 100, color='black')
+        pl.xlabel('Amplitude [A.D.U.]')
+        pl.ylabel('Events')
+#        pl.xlim([0,200])
+        pl.show()   
+        
+        amp_hist2 = pl.hist(spike_amp_spike, range=(0,10**3), bins = 50, color='black')
+        pl.xlabel('Amplitude [A.D.U.]')
+        pl.ylabel('Events')
+#        pl.xlim([0,200])
+        pl.show()    
+        
+        fig17 = pl.figure()
+        ax = pl.gca()
+        ax.plot(signal_amp_spike , signal_chis_spike, '.', c='red', markeredgecolor='none')
+        ax.plot(spike_amp_spike, spike_chis_spike, '.', c='orange', markeredgecolor='none')
+        ax.plot(PU_amp_spike , PU_chis_spike, '.', c='blue', markeredgecolor='none')
+        ax.plot(misc_amp_spike , misc_chis_spike, '.', c='black', markeredgecolor='none')
+        ax.set_yscale('log')
+        ax.set_xscale('log')
+        ax.set_xlabel('Amplitude')
+        ax.set_ylabel('Chi Sq. of Spike Fit')
+        ax.minorticks_on()
+        ax.set_xlim([10**0, 10**4])
+        ax.set_ylim([10**2, 10**7])
+        pl.show()
+        
+        fig18 = pl.figure()
+        ax = pl.gca()
+        ax.plot(signal_amp_spike , signal_chis_spike, '.', c='red', markeredgecolor='none')
+        ax.plot(spike_amp_spike, spike_chis_spike, '.', c='orange', markeredgecolor='none')
+        ax.plot(PU_amp_spike , PU_chis_spike, '.', c='blue', markeredgecolor='none')
+        ax.plot(misc_amp_spike , misc_chis_spike, '.', c='black', markeredgecolor='none')
+        ax.set_yscale('log')
+        ax.set_xscale('log')
+        ax.set_xlabel('Amplitude')
+        ax.set_ylabel('Chi Sq. of Spike Fit')
+        ax.minorticks_on()
+#        ax.set_xlim([10**0, 10**4])
+#        ax.set_ylim([10**2, 10**7])
+        pl.show()
+                
         print "Total pulses", (len(signal_amp_oneAmp) + len(spike_amp_oneAmp) + len(PU_amp_oneAmp)+ len(misc_amp_oneAmp))
 #        analyzeFitResults([signalBand_twoamp_pulse_dict_list])
                     
@@ -866,11 +930,11 @@ def PCAtemplate(list_ofPulse_Dict_Lists, list_ofNoisePSDs = []):
             errors.append(result.get("amp error") )
             
             obs_fourier = np.fft.fft(result.get("obs pulse"))
-            weighted_fourier = obs_fourier/(list_ofNoisePSDs_sqrts[r])
-            
+#            weighted_fourier = obs_fourier/(list_ofNoisePSDs_sqrts[r])
+#            
             obs_fouriers.append(obs_fourier)
-            weighted_fouriers.append(weighted_fourier)
-            
+#            weighted_fouriers.append(weighted_fourier)
+#            
     
     if len(obs_pulses) == 0:
         print "NO PULSES FOUND"
@@ -950,77 +1014,77 @@ def PCAtemplate(list_ofPulse_Dict_Lists, list_ofNoisePSDs = []):
         
     lambdas = s**2
     print lambdas[0:20]/(sum(lambdas[0:20]))
-    
-    print "\n PCA Noise Weighted centered\n"
-    mean_fourier = np.mean(weighted_fouriers, axis=0) 
-    centered_fourier_matrix = weighted_fouriers - mean_fourier
-    (u, s, vh) = np.linalg.svd(centered_fourier_matrix)
-    print "hi2"
-    print "lengths", len(vh[0]), len(u[:,0])
-    print np.shape(u), np.shape(vh)
-    one_second_interval = np.linspace(0,1, int(fe))
-    print type(u), type(s), type(vh)
-    print type(vh[0]), type(vh[0][0])
-    
-    save_principal_1 = []
-    for i in range(6):
-        standard_template = theta_exp(one_second_interval, (0.24, 0.008,1.1))
-        standard_template_max = max(standard_template)
-        
-        vector = np.real(np.fft.ifft(vh[i]))
-        zeroed_vector = vector - vector[0]
-        if max(np.abs(zeroed_vector)) == max(zeroed_vector):
-            scaling = standard_template_max/max(zeroed_vector)
-        else:
-            scaling = standard_template_max/min(zeroed_vector)
-        scaled_vector = scaling*zeroed_vector
-#        scaled_vector[int(0.2*fe):] = 0
-        try:
-            if i==0:
-                fit = curve_fit(A_theta_exp, one_second_interval, scaled_vector, (1.0, 0.24, 0.008,1.1))
-#                fit = curve_fit(A_theta_exp, one_second_interval, scaled_vector, (1.0, 0.14, 0.008,0.04))
-                print fit
-                save_principal_1 = scaled_vector
-                pl.plot(one_second_interval, scaled_vector, label = 'Principal Component 0', color='b')
-                pl.plot(one_second_interval, standard_template, label='Initial Guess')
-                pl.plot(one_second_interval, fit[0][0]*theta_exp(one_second_interval, fit[0][1:]) , label='Best Fit', color='r')
-                pl.legend()
-                pl.show()
-                print "RSS error of best fit", sum( (fit[0][0]*theta_exp(one_second_interval, fit[0][1:]) - scaled_vector)**2 )
-                print "RSS error of initial guess fit", sum( (standard_template - scaled_vector)**2 )
-                print "Best Params", fit[0]
-                print "Best rise time: ", fit[0][2], " +- ", np.sqrt(fit[1][2][2])
-                print "Best Fall time: ", fit[0][3], " +- ", np.sqrt(fit[1][3][3])
-                print "Cov of Rise Time", fit[1][2]
-                print "Cov of Fall Time", fit[1][3]
-                print "Cov Matrix", fit[1]
-                
-                fit2 = curve_fit(AB_theta_exp, one_second_interval, scaled_vector, (0.24, 0.008,1.1, 2.5, 0.5, 0.5), 
-                bounds=([0.23, 0, 0, 0, 0, 0], [0.25, 0.1 , 2, 3, 1, 1]))
-                
-                pl.plot(one_second_interval, scaled_vector, label = 'Principal Component 0', color='b')
-                pl.plot(one_second_interval, AB_theta_exp(one_second_interval, 0.24, 0.008,1.1, 2.5, 0.5, 0.5), label='Initial Guess 2 Amp')
-                pl.plot(one_second_interval, AB_theta_exp(one_second_interval, fit2[0][0], fit2[0][1], fit2[0][2], fit2[0][3], fit2[0][4], fit2[0][5])  , label='Best Fit 2 Amp', color='r')
-                pl.legend()
-                pl.show()
-                print "RSS error of best fit", sum( (AB_theta_exp(one_second_interval, fit2[0][0], fit2[0][1], fit2[0][2], fit2[0][3], fit2[0][4], fit2[0][5]) - scaled_vector)**2 )
-                print "Best Params", fit2[0]
-                print "Best rise time: ", fit2[0][1], " +- ", np.sqrt(fit2[1][1][1])
-                print "Best Fall time 1: ", fit2[0][2], " +- ", np.sqrt(fit2[1][2][2])
-                print "Best Fall time 2: ", fit2[0][3], " +- ", np.sqrt(fit2[1][3][3]) 
-                print "Cov Matrix", fit2[1]
-        except:
-            print "Fit failed on principal component 0"
-#            
-        pl.plot(one_second_interval, scaled_vector, label= "Principal Component " + str(i) , color = 'b')
-        pl.plot(one_second_interval, standard_template , label='Template', color = 'r')
-        pl.xlabel('Time [s]')
-        pl.ylabel('Amplitude [ADU]')
-        pl.legend()
-        pl.show()
-    
+#    
+#    print "\n PCA Noise Weighted centered\n"
+#    mean_fourier = np.mean(weighted_fouriers, axis=0) 
+#    centered_fourier_matrix = weighted_fouriers - mean_fourier
+#    (u, s, vh) = np.linalg.svd(centered_fourier_matrix)
+#    print "hi2"
+#    print "lengths", len(vh[0]), len(u[:,0])
+#    print np.shape(u), np.shape(vh)
+#    one_second_interval = np.linspace(0,1, int(fe))
+#    print type(u), type(s), type(vh)
+#    print type(vh[0]), type(vh[0][0])
+#    
+#    save_principal_1 = []
+#    for i in range(6):
+#        standard_template = theta_exp(one_second_interval, (0.24, 0.008,1.1))
+#        standard_template_max = max(standard_template)
+#        
+#        vector = np.real(np.fft.ifft(vh[i]))
+#        zeroed_vector = vector - vector[0]
+#        if max(np.abs(zeroed_vector)) == max(zeroed_vector):
+#            scaling = standard_template_max/max(zeroed_vector)
+#        else:
+#            scaling = standard_template_max/min(zeroed_vector)
+#        scaled_vector = scaling*zeroed_vector
+##        scaled_vector[int(0.2*fe):] = 0
+#        try:
+#            if i==0:
+#                fit = curve_fit(A_theta_exp, one_second_interval, scaled_vector, (1.0, 0.24, 0.008,1.1))
+##                fit = curve_fit(A_theta_exp, one_second_interval, scaled_vector, (1.0, 0.14, 0.008,0.04))
+#                print fit
+#                save_principal_1 = scaled_vector
+#                pl.plot(one_second_interval, scaled_vector, label = 'Principal Component 0', color='b')
+#                pl.plot(one_second_interval, standard_template, label='Initial Guess')
+#                pl.plot(one_second_interval, fit[0][0]*theta_exp(one_second_interval, fit[0][1:]) , label='Best Fit', color='r')
+#                pl.legend()
+#                pl.show()
+#                print "RSS error of best fit", sum( (fit[0][0]*theta_exp(one_second_interval, fit[0][1:]) - scaled_vector)**2 )
+#                print "RSS error of initial guess fit", sum( (standard_template - scaled_vector)**2 )
+#                print "Best Params", fit[0]
+#                print "Best rise time: ", fit[0][2], " +- ", np.sqrt(fit[1][2][2])
+#                print "Best Fall time: ", fit[0][3], " +- ", np.sqrt(fit[1][3][3])
+#                print "Cov of Rise Time", fit[1][2]
+#                print "Cov of Fall Time", fit[1][3]
+#                print "Cov Matrix", fit[1]
+#                
+#                fit2 = curve_fit(AB_theta_exp, one_second_interval, scaled_vector, (0.24, 0.008,1.1, 2.5, 0.5, 0.5), 
+#                bounds=([0.23, 0, 0, 0, 0, 0], [0.25, 0.1 , 2, 3, 1, 1]))
+#                
+#                pl.plot(one_second_interval, scaled_vector, label = 'Principal Component 0', color='b')
+#                pl.plot(one_second_interval, AB_theta_exp(one_second_interval, 0.24, 0.008,1.1, 2.5, 0.5, 0.5), label='Initial Guess 2 Amp')
+#                pl.plot(one_second_interval, AB_theta_exp(one_second_interval, fit2[0][0], fit2[0][1], fit2[0][2], fit2[0][3], fit2[0][4], fit2[0][5])  , label='Best Fit 2 Amp', color='r')
+#                pl.legend()
+#                pl.show()
+#                print "RSS error of best fit", sum( (AB_theta_exp(one_second_interval, fit2[0][0], fit2[0][1], fit2[0][2], fit2[0][3], fit2[0][4], fit2[0][5]) - scaled_vector)**2 )
+#                print "Best Params", fit2[0]
+#                print "Best rise time: ", fit2[0][1], " +- ", np.sqrt(fit2[1][1][1])
+#                print "Best Fall time 1: ", fit2[0][2], " +- ", np.sqrt(fit2[1][2][2])
+#                print "Best Fall time 2: ", fit2[0][3], " +- ", np.sqrt(fit2[1][3][3]) 
+#                print "Cov Matrix", fit2[1]
+#        except:
+#            print "Fit failed on principal component 0"
+##            
+#        pl.plot(one_second_interval, scaled_vector, label= "Principal Component " + str(i) , color = 'b')
+#        pl.plot(one_second_interval, standard_template , label='Template', color = 'r')
+#        pl.xlabel('Time [s]')
+#        pl.ylabel('Amplitude [ADU]')
+#        pl.legend()
+#        pl.show()
+#    
 #    (u, s, vh) = np.linalg.svd(centered_pulse_matrix)
-    return save_principal_0, save_principal_1
+    return save_principal_0
 #    print "\n PCA Freq Domain Centered\n"
     
 
@@ -1076,8 +1140,8 @@ def newFitComparison(list_ofPulse_Dict_Lists, list_ofNoisePSDs , templateFunc):
 
     
 
-file_name = 'data_run42_dbz1/20180315_14h24'; source = "Fe"; #No source#
-#file_name = 'data_run42_dbz1/20180313_18h32'; source = "Barium"; #good Ba 14 chunks run
+#file_name = 'data_run42_dbz1/20180315_14h24'; source = "Fe"; #No source#
+file_name = 'data_run42_dbz1/20180313_18h32'; source = "Barium"; #good Ba 14 chunks run
 #file_name = 'data_run42_dbz1/20180314_16h12'; source = "Neutron";  #Neutrons 16 chunks
 #source = "Neutron" #or "Barium", Neutron, or Fe
 chunk_size = 1
@@ -1203,12 +1267,12 @@ for i in range(chunk_number):
 ##reFit_optimalFiltering1amp(list_oneAmpResults, list_NoisePSDs )
 ##assert False
 
-#print "====================================================="
-#print "ALL POSITIVE AMPLITUDE PULSES"
-#print "====================================================="
-#analyzeFitResults(list_oneAmpResults_posAmps)
+print "====================================================="
+print "ALL POSITIVE AMPLITUDE PULSES"
+print "====================================================="
+analyzeFitResults(list_oneAmpResults_posAmps)
 ##compareFitResults(list_oneAmpResults, list_twoAmpResults, list_spikeResults)
-#compareFitResults(list_oneAmpResults, list_new_twoAmpResults, list_spikeResults)
+compareFitResults(list_oneAmpResults, list_new_twoAmpResults, list_spikeResults)
 #PCAtemplate(list_oneAmpResults_posAmps)
 #spectralClusterPulses(list_oneAmpResults_posAmps)
 #print "====================================================="
@@ -1217,8 +1281,8 @@ for i in range(chunk_number):
 #analyzeFitResults(list_oneAmpResults_signal)
 #
 #
-##analyzeFitResults(list_oneAmpResults_signal)
-##Nu_pc0_signal = PCAtemplate(list_oneAmpResults_signal)
+#analyzeFitResults(list_oneAmpResults_signal)
+#pc0_signal = PCAtemplate(list_oneAmpResults_signal)
 ##
 ##
 ###print "====================================================="
@@ -1238,9 +1302,9 @@ for i in range(chunk_number):
 #print "POTENTIAL SPIKE BAND PULSES ONLY"
 #print "====================================================="
 #analyzeFitResults(list_oneAmpResults_spike)
-#Nu_pc0_spike = PCAtemplate(list_oneAmpResults_spike)
-#with open('Nu_pc0s.p', 'wb') as fp:
-#        pickle.dump( (Nu_pc0_signal, Nu_pc0_spike) , fp )
+#pc0_spike = PCAtemplate(list_oneAmpResults_spike)
+#with open(source + "_pc0s.p", 'wb') as fp:
+#        pickle.dump( (pc0_signal, pc0_spike) , fp )
 
 #print "====================================================="
 #print "Blob ONLY"
